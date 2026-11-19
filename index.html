@@ -36,11 +36,9 @@
   color-scheme: light;
 }
 * { box-sizing: border-box; }
-html { background: var(--red); }
+html { background-color: var(--red); background-image: var(--mosaic); background-size: 480px 480px; min-height: 100%; }
 body {
-  background-color: var(--red);
-  background-image: var(--mosaic);
-  background-size: 480px 480px;
+  background: transparent;
   color: var(--ink);
   font-family: var(--body);
   font-size: 16px;
@@ -229,19 +227,21 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 <div class="wrap">
   <div class="otterbar">
     <svg class="otter" id="otter" viewBox="0 0 120 140" role="img" aria-label="Kleiner Otter mit Partyhut">
-      <ellipse cx="60" cy="122" rx="36" ry="20" fill="#8B5A2B" stroke="#111" stroke-width="3"/>
-      <ellipse cx="60" cy="126" rx="18" ry="12" fill="#E8C39A"/>
-      <circle cx="28" cy="52" r="10" fill="#9C6634" stroke="#111" stroke-width="3"/><circle cx="28" cy="52" r="4.5" fill="#5E3A1C"/>
-      <circle cx="92" cy="52" r="10" fill="#9C6634" stroke="#111" stroke-width="3"/><circle cx="92" cy="52" r="4.5" fill="#5E3A1C"/>
-      <ellipse cx="60" cy="78" rx="38" ry="34" fill="#9C6634" stroke="#111" stroke-width="3"/>
-      <ellipse cx="60" cy="92" rx="25" ry="17" fill="#E8C39A" stroke="#111" stroke-width="2.5"/>
-      <circle cx="40" cy="92" r="5" fill="#FF2E88" opacity=".55"/><circle cx="80" cy="92" r="5" fill="#FF2E88" opacity=".55"/>
-      <circle cx="46" cy="72" r="6" fill="#111"/><circle cx="48" cy="70" r="2" fill="#fff"/>
-      <circle cx="74" cy="72" r="6" fill="#111"/><circle cx="76" cy="70" r="2" fill="#fff"/>
-      <ellipse cx="60" cy="85" rx="7.5" ry="5.5" fill="#111"/>
-      <path d="M60 90 Q60 97 52 97 M60 90 Q60 97 68 97" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M38 90 L18 86 M38 95 L18 98 M82 90 L102 86 M82 95 L102 98" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M50 116 Q54 108 60 116 M60 116 Q66 108 70 116" stroke="#111" stroke-width="2.5" fill="#9C6634"/>
+      <path d="M92 128 Q118 124 116 104 Q112 118 90 118 Z" fill="#6B3F1D" stroke="#111" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M30 140 Q26 104 60 102 Q94 104 90 140 Z" fill="#6B3F1D" stroke="#111" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M42 140 Q42 114 60 112 Q78 114 78 140 Z" fill="#EBD2AE"/>
+      <circle cx="22" cy="70" r="6.5" fill="#7A4A22" stroke="#111" stroke-width="3"/>
+      <circle cx="98" cy="70" r="6.5" fill="#7A4A22" stroke="#111" stroke-width="3"/>
+      <ellipse cx="60" cy="80" rx="42" ry="31" fill="#7A4A22" stroke="#111" stroke-width="3"/>
+      <path d="M26 92 Q30 112 60 112 Q90 112 94 92 Q84 84 60 84 Q36 84 26 92 Z" fill="#EBD2AE"/>
+      <ellipse cx="60" cy="80" rx="42" ry="31" fill="none" stroke="#111" stroke-width="3"/>
+      <circle cx="44" cy="74" r="6" fill="#111"/><circle cx="46" cy="72" r="2" fill="#fff"/>
+      <circle cx="76" cy="74" r="6" fill="#111"/><circle cx="78" cy="72" r="2" fill="#fff"/>
+      <ellipse cx="60" cy="88" rx="8.5" ry="6" fill="#111"/><ellipse cx="57" cy="86" rx="2.5" ry="1.5" fill="#fff" opacity=".6"/>
+      <path d="M60 94 Q60 101 52 101 M60 94 Q60 101 68 101" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="38" cy="96" r="5" fill="#FF2E88" opacity=".45"/><circle cx="82" cy="96" r="5" fill="#FF2E88" opacity=".45"/>
+      <path d="M44 95 L12 89 M44 99 L12 101 M76 95 L108 89 M76 99 L108 101" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M40 126 q6 -8 12 0 M68 126 q6 -8 12 0" stroke="#111" stroke-width="2.5" fill="#7A4A22"/>
       <g transform="rotate(14 72 30)">
         <path d="M54 48 L90 48 L72 4 Z" fill="#E8202A" stroke="#111" stroke-width="3" stroke-linejoin="round"/>
         <path d="M60 33 L84 33 M64 22 L80 22" stroke="#FFD400" stroke-width="4"/>
@@ -472,7 +472,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   function renderCake() {
     const out = !!S.cake;
     lit = CANDLES.map(() => !out);
-    const tri = (x, c) => `<path d="M${x} 150 l12 -14 l12 14z" fill="${c}" stroke="#111" stroke-width="2"/>`;
+    const tri = (x, c) => `<path d="M${x} 186 l12 -16 l12 16z" fill="${c}" stroke="#111" stroke-width="2"/>`;
     let band = ""; for (let k = 0; k < 11; k++) band += tri(40 + k * 16.4, ["#FFD400", "#0091D5", "#00A651", "#FF7A00"][k % 4]);
     $("cake").innerHTML = `
       <ellipse cx="130" cy="192" rx="118" ry="14" fill="#fff" stroke="#111" stroke-width="3"/>
