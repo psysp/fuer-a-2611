@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Für Anke</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Sedgwick+Ave+Display&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow column, step by step: quiz -> mental-math safe -> three wrapped parcels (each unwrapped by a mini game) -> knockout duel -> voucher. Single deliberate light look (print-shop paper with riso inks). */
+:root {
+  --paper: #EEEDE8;
+  --sheet: #FBFBF8;
+  --ink: #1D1F24;
+  --muted: #5E6068;
+  --line: #CFCDC5;
+  --concrete: #8E9093;
+  --pink: #FF48B0;
+  --blue: #0078BF;
+  --yellow: #FFD23F;
+  --ok: #1E8C5A;
+  --bad: #C4302B;
+  --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--paper); color: var(--ink); }
+body {
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.3rem, 8vw, 3.8rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.6rem, 5vw, 2.2rem); font-weight: 800; }
+h3 { font-size: 1.3rem; font-weight: 800; }
+p { margin: 0; max-width: 62ch; }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lead { font-size: 1.12rem; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.small { font-size: 0.85rem; color: var(--muted); }
+
+button {
+  font: 600 1rem/1 var(--body);
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  color: var(--sheet);
+  padding: 13px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button.ghost { background: transparent; color: var(--ink); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+/* hero: name printed with riso misregistration */
+.misreg { position: relative; display: inline-block; }
+.misreg span { display: block; }
+.misreg .l1 { color: var(--pink); mix-blend-mode: multiply; }
+.misreg .l2 { color: var(--blue); mix-blend-mode: multiply; position: absolute; inset: 0; transform: translate(3px, 2px); }
+
+/* step indicator */
+.steps { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+.steps span { padding: 5px 10px; border-radius: 99px; border: 1.5px solid var(--line); color: var(--muted); }
+.steps span.on { border-color: var(--ink); color: var(--ink); background: var(--yellow); }
+.steps span.past { border-color: var(--ink); color: var(--ink); }
+
+.panel { background: var(--sheet); border: 2px solid var(--ink); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* quiz */
+.answers { display: grid; gap: 8px; }
+.answers button { background: var(--paper); color: var(--ink); border-color: var(--line); border-radius: 10px; text-align: left; line-height: 1.3; }
+.answers button:hover { border-color: var(--ink); }
+.answers button.wrong { border-color: var(--bad); color: var(--bad); text-decoration: line-through; }
+.answers button.right { border-color: var(--ok); background: var(--ok); color: var(--sheet); }
+.feedback { font-weight: 600; min-height: 1.5em; }
+.notes { display: flex; gap: 8px; flex-wrap: wrap; }
+.notes span { width: 46px; height: 58px; border: 2px dashed var(--line); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 1.25rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.notes span small { font-size: .65rem; color: var(--muted); }
+.notes span.got { border: 2px solid var(--ink); background: var(--yellow); }
+.formulas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.formulas li { display: flex; gap: 12px; align-items: baseline; background: var(--sheet); border: 2px solid var(--ink); border-radius: 10px; padding: 10px 14px; font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.formulas li b { font-family: var(--body); font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); min-width: 4.5em; }
+
+/* safe */
+.safe { background: #2b2e35; color: var(--sheet); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 16px; align-items: center; border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--pink); }
+.display { display: flex; gap: 6px; }
+.display span { width: 34px; height: 50px; background: #14161a; border-radius: 6px; display: grid; place-items: center; font-family: var(--mono); font-size: 1.5rem; color: var(--yellow); }
+.safe.shake { animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.keypad { display: grid; grid-template-columns: repeat(3, 64px); gap: 10px; }
+.keypad button { background: #3d414a; border-color: #555a65; color: var(--sheet); border-radius: 12px; padding: 0; height: 56px; font-family: var(--mono); font-size: 1.3rem; }
+.keypad button.go { background: var(--ok); border-color: var(--ok); }
+.safe .msg { font-family: var(--mono); font-size: .85rem; color: #c9cbd1; min-height: 1.4em; text-align: center; }
+
+/* parcels */
+.parcels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .parcels { grid-template-columns: 1fr; } }
+.parcel { background: var(--sheet); border: 2px solid var(--ink); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font: inherit; color: var(--ink); cursor: pointer; min-width: 0; }
+.parcel svg { width: 96px; height: 96px; }
+.parcel .state { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.parcel.open .state { color: var(--ok); }
+@media (max-width: 560px) { .parcel { flex-direction: row; text-align: left; } .parcel svg { width: 64px; height: 64px; flex: none; } }
+
+/* reveal card */
+.reveal { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; border-top: 2px dashed var(--line); padding-top: 16px; }
+.reveal svg { width: 110px; height: 110px; flex: none; }
+.reveal .txt { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.points { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+
+/* games */
+.meter { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+.molds { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.molds { background: repeating-linear-gradient(90deg, #e2ddd2 0 22px, #dcd6ca 22px 44px); border: 2px solid var(--ink); border-radius: 12px; padding: 18px 10px 14px; }
+.molds { flex-wrap: nowrap; }
+.mold { flex: 1 1 0; max-width: 96px; min-width: 0; position: relative; transition: transform .2s; }
+.mold svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mold.active { transform: translateY(-6px); }
+.mold.active::after { content: ""; position: absolute; left: 50%; bottom: -10px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--ink); }
+.mold.ok { animation: popout .5s ease-out; }
+.mold.spill { animation: wobble .4s; }
+@keyframes popout { 40% { transform: translateY(-14px) scale(1.06); } }
+@keyframes wobble { 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .mold.ok, .mold.spill { animation: none; } }
+.pour { align-self: center; user-select: none; -webkit-user-select: none; padding: 18px 34px; font-size: 1.1rem; }
+.pour.holding { background: var(--blue); border-color: var(--blue); }
+.wall { position: relative; width: 100%; height: 260px; border-radius: 10px; overflow: hidden; border: 2px solid var(--ink); touch-action: none; }
+.wall canvas.piece { background: #3a3d44; }
+.wall canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+.press { width: min(320px, 100%); aspect-ratio: 1; max-width: 100%; margin: 0 auto; border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; }
+.press svg { display: block; width: 100%; height: 100%; }
+
+/* duel */
+.round { font-family: var(--mono); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+.duel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.vs { align-self: center; font-family: var(--display); font-weight: 800; font-size: 1.6rem; color: var(--pink); }
+.fighter { background: var(--sheet); border: 2px solid var(--ink); border-radius: 14px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font: inherit; color: var(--ink); cursor: pointer; min-width: 0; line-height: 1.3; }
+.fighter:hover { box-shadow: 4px 4px 0 var(--pink); }
+.fighter svg { width: 84px; height: 84px; }
+.fighter strong { font-family: var(--display); font-size: 1.15rem; }
+.fighter.win { border-color: var(--ok); box-shadow: 4px 4px 0 var(--ok); }
+.fighter.lose { opacity: .35; }
+.bracket { display: flex; gap: 8px; flex-wrap: wrap; font-size: .9rem; }
+.bracket span { padding: 4px 10px; border-radius: 99px; background: var(--sheet); border: 1.5px solid var(--line); }
+.bracket span.out { text-decoration: line-through; color: var(--muted); }
+.final { background: var(--yellow); border: 2px solid var(--ink); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+
+/* voucher */
+.voucher { background: var(--sheet); border: 2px solid var(--ink); border-radius: 16px; overflow: hidden; }
+.voucher .top { padding: 22px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.voucher .top svg { width: 90px; height: 90px; flex: none; }
+.voucher .top .txt { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.voucher .perf { border-top: 3px dotted var(--ink); margin: 0 14px; }
+.voucher .bottom { padding: 18px 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stub { font-family: var(--mono); font-size: .8rem; }
+.stub b { display: block; font-family: var(--body); font-size: 1rem; }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; width: 100%; height: 100%; }
+
+@keyframes pop { from { transform: scale(.96); opacity: .6; } to { transform: none; opacity: 1; } }
+.pop { animation: pop .35s ease-out; }
+@media (prefers-reduced-motion: reduce) { .pop, .safe.shake { animation: none; } }
+</style>
+</head>
+<body>
+
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="wrap">
+  <div class="steps" id="steps" hidden><span>1 Quiz</span><span>2 Tresor</span><span>3 Päckchen</span><span>4 Duell</span></div>
+
+  <!-- INTRO -->
+  <section id="v-intro" class="stack">
+    <p class="eyebrow">Zum Geburtstag</p>
+    <h1 class="misreg" aria-label="Alles Gute, Anke!"><span class="l1">Alles Gute,<br>Anke!</span><span class="l2" aria-hidden="true">Alles Gute,<br>Anke!</span></h1>
+    <p class="lead">Dein Geschenk liegt gut verschlossen in einem Tresor.</p>
+    <p>Den Code bekommst du Stück für Stück. Ich stelle dir ein paar Fragen über uns. Jede richtige Antwort gibt dir eine Zahl für deine Notizen. Daraus rechnest du am Ende den Code aus.</p>
+    <div class="row"><button id="start">Quiz starten</button></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="v-quiz" class="stack" hidden>
+    <div class="panel" id="quiz"></div>
+    <div class="stack" style="gap:8px">
+      <p class="eyebrow">Deine Notizen für den Tresor</p>
+      <div class="notes" id="notes"></div>
+    </div>
+  </section>
+
+  <!-- SAFE -->
+  <section id="v-safe" class="stack" hidden>
+    <p class="eyebrow">Kategorie: Kopfrechnen</p>
+    <h2>Deine Lieblingskategorie</h2>
+    <p>Bei Flizz hasse ich sie, du liebst sie. Also rechnest du dir den Code selbst aus. Jede Zeile ergibt eine Ziffer. Setz deine Notizen ein, ohne Taschenrechner!</p>
+    <div class="notes" id="notes2"></div>
+    <ol class="formulas" id="formulas"></ol>
+    <div class="safe" id="safe">
+      <div class="display" id="display"></div>
+      <div class="keypad" id="keypad"></div>
+      <p class="msg" id="smsg" aria-live="polite">Code eingeben</p>
+    </div>
+  </section>
+
+  <!-- PARCELS -->
+  <section id="v-parcels" class="stack" hidden>
+    <p class="eyebrow">Der Tresor ist offen</p>
+    <h2>Drei Päckchen</h2>
+    <p>Im Tresor liegen drei Päckchen. In jedem steckt etwas, das wir zusammen machen können. Auspacken geht nur mit Geschick: Jedes Päckchen hat seine eigene Aufgabe.</p>
+    <div class="parcels" id="parcels"></div>
+    <div class="row"><button id="to-duel" disabled>Zum Duell</button><span class="small" id="progress"></span></div>
+  </section>
+
+  <!-- GAME -->
+  <section id="v-game" class="stack" hidden>
+    <div class="row"><button class="ghost" id="back">← Zurück zum Tresor</button></div>
+    <div class="panel" id="stage"></div>
+  </section>
+
+  <!-- DUEL -->
+  <section id="v-duel" class="stack" hidden>
+    <p class="eyebrow">Du darfst dir einen aussuchen</p>
+    <h2>Das große Duell</h2>
+    <p>Immer zwei treten gegeneinander an. Tipp auf den, der dir lieber ist. Der Sieger kommt weiter.</p>
+    <div class="bracket" id="bracket"></div>
+    <div class="panel" id="arena"></div>
+  </section>
+
+  <!-- VOUCHER -->
+  <section id="v-ticket" class="stack" hidden>
+    <div class="voucher pop">
+      <div class="top">
+        <span id="t-icon"></span>
+        <div class="txt">
+          <p class="eyebrow">Gutschein für dich und mich</p>
+          <h2 id="t-title"></h2>
+          <ul class="points" id="t-points"></ul>
+        </div>
+      </div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="bottom" id="t-stub"></div>
+    </div>
+    <p><strong>Zeig mir diesen Bildschirm</strong> oder schick mir einen Screenshot. Dann suchen wir zusammen einen Termin aus und ich buche.</p>
+    <div class="row"><button class="ghost" id="restart">Duell nochmal</button></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------- content ----------
+  const QUIZ = [
+    { q: "Fangen wir ganz vorne an: Über welche App haben wir uns kennengelernt?", a: ["Tinder", "Hinge", "Bumble", "OkCupid"], ok: 2, no: "Hoffentlich nicht! Nochmal." },
+    { q: "Wo haben wir uns für unser erstes Date getroffen?", a: ["U-Bahn Münchner Freiheit", "U-Bahn Freimann", "U-Bahn Giselastraße", "U-Bahn Studentenstadt"], ok: 1, no: "Knapp, aber eine andere Station." },
+    { q: "Was haben wir bei diesem ersten Spaziergang durch den Englischen Garten gesucht?", a: ["Die Surfer am Eisbach", "Einen freien Platz am Chinesischen Turm", "Einen Geocache", "Den Monopteros"], ok: 2, no: "Nein, wir waren auf Schatzsuche." },
+    { q: "Wir gehen spazieren, es hat gemütliche 15 Grad. Wer von uns hat mehr Schichten an?", a: ["Du", "Ich, mindestens eine Schicht mehr", "Beide gleich viele", "Keiner, wir gehen im T-Shirt"], ok: 1, no: "Wirklich? Zähl nochmal nach." },
+    { q: "Unser erster Ausflug mit Übernachtung ging an den Bodensee. Unterwegs wollten wir mein Rennrad zur Werkstatt bringen. Wo standen wir stattdessen?", a: ["Vor einer Autowerkstatt", "Vor einem ganz normalen Wohnhaus", "Vor einem geschlossenen Radladen", "Auf einem Supermarkt-Parkplatz"], ok: 1, no: "Noch peinlicher. Nochmal!" },
+    { q: "Wo haben wir am nächsten Morgen in Konstanz gefrühstückt?", a: ["Im Hotel am Buffet", "In einem winzigen Café mitten im Wohngebiet", "Am Hafen mit Blick auf den See", "Beim Bäcker, auf die Hand"], ok: 1, no: "Nein, das war viel unscheinbarer." },
+    { q: "Apropos Essen: Was ist dein absolutes Lieblingsessen?", a: ["Käsespätzle", "Sushi", "Currywurst", "Pizza"], ok: 2, no: "Da kenne ich dich aber anders." },
+    { q: "In welcher Stadt hast du ein Kobra-Mural mit eigenen Augen gesehen?", a: ["Porto", "Berlin", "Lissabon", "Barcelona"], ok: 2, no: "Da waren wir zusammen. Denk nach!" },
+    { q: "Womit endet fast jeder Abend, bevor wir einschlafen?", a: ["Mit einem Sprachmemo auf Signal", "Mit einem Gute-Nacht-Selfie", "Mit einer Folge „Die Brücke“", "Mit einem Tiervideo auf Instagram"], ok: 3, no: "Fast. Was kommt ganz am Ende?" },
+    { q: "Wir schauen zusammen „Die Brücke“. Welche zwei Städte verbindet die Brücke aus der Serie?", a: ["Stockholm und Helsinki", "Kopenhagen und Malmö", "Oslo und Göteborg", "Kopenhagen und Hamburg"], ok: 1, no: "Nein. Zeit für einen Serienabend!" },
+    { q: "Letzte Frage. Wie fängt jede Strophe von deinem absoluten Lieblingslied an?", a: ["„Kleines Äffchen …“", "„Kleiner Otter …“", "„Kleiner Biber …“", "„Oh, Anke …“"], ok: 1, no: "Falsch. Soll ich es dir vorsingen?" }
+  ];
+  // Each correct answer earns a number (note A–K). The safe code is computed from them.
+  const LETTERS = "ABCDEFGHIJK";
+  [7, 12, 4, 7, 9, 15, 3, 8, 6, 11, 9].forEach((v, i) => { QUIZ[i].digit = v; });
+  const CODE = "618432";
+  const FORMULAS = [
+    "B · G − 2 · F",        // 36 − 30 = 6
+    "(F + E) ÷ G − D",      // 8 − 7 = 1
+    "I · I − A · C",        // 36 − 28 = 8
+    "H · J − A · B",        // 88 − 84 = 4
+    "(E · C − F − B) ÷ G",  // 9 ÷ 3 = 3
+    "J · G − F − K − A"     // 33 − 31 = 2
+  ];
+
+  const ICON = {
+    parcel: (c) => `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="34" width="72" height="54" rx="4" fill="${c}" stroke="#1D1F24" stroke-width="3"/><rect x="10" y="24" width="80" height="16" rx="3" fill="${c}" stroke="#1D1F24" stroke-width="3"/><rect x="45" y="24" width="10" height="64" fill="#FF48B0"/><path d="M50 24 C36 6 24 14 34 22 C38 25 46 24 50 24 C54 24 62 25 66 22 C76 14 64 6 50 24Z" fill="#FF48B0" stroke="#1D1F24" stroke-width="2.5"/><text x="50" y="72" text-anchor="middle" font-family="Bricolage Grotesque, Arial Black, sans-serif" font-weight="800" font-size="20" fill="#1D1F24">?</text></svg>`,
+    beton: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M16 42 H84 L76 82 Q75 86 70 86 H30 Q25 86 24 82Z" fill="#8E9093" stroke="#1D1F24" stroke-width="3"/><ellipse cx="50" cy="42" rx="34" ry="8" fill="#a6a8ab" stroke="#1D1F24" stroke-width="3"/><circle cx="38" cy="62" r="3" fill="#FF48B0"/><circle cx="58" cy="70" r="3.5" fill="#FFD23F"/><circle cx="64" cy="56" r="2.5" fill="#0078BF"/><circle cx="46" cy="76" r="2" fill="#FBFBF8"/><path d="M58 30 C58 22 66 18 70 12" stroke="#1D1F24" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M70 12 C64 16 64 22 70 24 C76 22 76 16 70 12Z" fill="#1E8C5A" stroke="#1D1F24" stroke-width="2"/></svg>`,
+    graffiti: `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="32" y="30" width="36" height="60" rx="8" fill="#FF48B0" stroke="#1D1F24" stroke-width="3"/><rect x="38" y="18" width="24" height="14" rx="3" fill="#FBFBF8" stroke="#1D1F24" stroke-width="3"/><rect x="46" y="10" width="8" height="9" fill="#1D1F24"/><rect x="32" y="50" width="36" height="14" fill="#FFD23F" stroke="#1D1F24" stroke-width="3"/><circle cx="22" cy="12" r="3" fill="#0078BF"/><circle cx="16" cy="20" r="2" fill="#0078BF"/><circle cx="26" cy="22" r="2.5" fill="#0078BF"/><circle cx="12" cy="10" r="1.5" fill="#0078BF"/></svg>`,
+    sieb: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M32 14 L18 22 L8 40 L22 46 L26 40 V88 H74 V40 L78 46 L92 40 L82 22 L68 14 C64 22 36 22 32 14Z" fill="#FBFBF8" stroke="#1D1F24" stroke-width="3" stroke-linejoin="round"/><path d="M50 72 C34 62 36 46 44 46 C48 46 50 50 50 52 C50 50 52 46 56 46 C64 46 66 62 50 72Z" fill="#0078BF"/><path d="M50 72 C34 62 36 46 44 46 C48 46 50 50 50 52 C50 50 52 46 56 46 C64 46 66 62 50 72Z" fill="#FF48B0" opacity=".85" transform="translate(3 2)" style="mix-blend-mode:multiply"/></svg>`
+  };
+
+  const W = {
+    beton: {
+      name: "Dekoration aus Beton", short: "Beton", where: "Kreativstudio München", paper: "#FFD23F",
+      points: ["Drei eigene Deko-Stücke aus Kreativbeton gießen", "Einfärben, marmoriert oder im Terrazzo-Look", "Getränke und Snacks inklusive"],
+      take: "3 Betonstücke, Tasche und Pflege-Kit", when: "ca. 2 Stunden",
+      game: "beton"
+    },
+    graffiti: {
+      name: "Graffiti für Beginner", short: "Graffiti", where: "KUNSTLABOR 2, Dachauer Str. 90", paper: "#9fd4f2",
+      points: ["Grundtechniken lernen und auf Papier skizzieren", "Den Entwurf mit Dosen an eine echte Wand sprühen", "Teils im Innenhof, also eher ab Frühling"],
+      take: "Dein Werk als Foto, dazu Eintritt in die Ausstellung", when: "eher ab Frühling",
+      game: "graffiti"
+    },
+    sieb: {
+      name: "Siebdruck Basic", short: "Siebdruck", where: "dreierrr, Kirchenstraße 97", paper: "#ffb3dc",
+      points: ["Ein eigenes Shirt im Siebdruck bedrucken", "Farbe, Sieb und Rakel, alles inklusive"],
+      take: "1 Fairtrade-Shirt in deiner Größe", when: "ca. 3 Stunden, Start 15 Uhr",
+      game: "sieb"
+    }
+  };
+  const ORDER = ["beton", "graffiti", "sieb"];
+
+  // ---------- state ----------
+  const KEY = "werkstatt-geschenk-v3";
+  if (location.hash === "#neustart") {
+    try { ["v1", "v2", "v3"].forEach(v => localStorage.removeItem("werkstatt-geschenk-" + v)); } catch (e) {}
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+  let S = { started: false, q: 0, safe: false, opened: {}, choice: null };
+  try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const VIEWS = ["v-intro", "v-quiz", "v-safe", "v-parcels", "v-game", "v-duel", "v-ticket"];
+  const STEP = { "v-quiz": 0, "v-safe": 1, "v-parcels": 2, "v-game": 2, "v-duel": 3, "v-ticket": 3 };
+  function show(id) {
+    VIEWS.forEach(v => $(v).hidden = v !== id);
+    const st = $("steps");
+    st.hidden = !(id in STEP);
+    [...st.children].forEach((s, i) => { s.className = i === STEP[id] ? "on" : i < STEP[id] ? "past" : ""; });
+    window.scrollTo(0, 0);
+  }
+
+  // ---------- intro ----------
+  $("start").addEventListener("click", () => { S.started = true; save(); renderQuiz(); show("v-quiz"); });
+
+  // ---------- quiz ----------
+  function renderNotes(el) {
+    el.innerHTML = QUIZ.map((x, i) => `<span class="${i < S.q ? "got" : ""}"><small>${LETTERS[i]}</small>${i < S.q ? x.digit : "?"}</span>`).join("");
+  }
+  function renderQuiz() {
+    renderNotes($("notes"));
+    const box = $("quiz");
+    if (S.q >= QUIZ.length) { renderSafe(); show("v-safe"); return; }
+    const item = QUIZ[S.q];
+    box.innerHTML = `<p class="eyebrow">Frage ${S.q + 1} von ${QUIZ.length}</p><h3>${esc(item.q)}</h3>
+      <div class="answers"></div><p class="feedback" aria-live="polite"></p>`;
+    const ab = box.querySelector(".answers"), fb = box.querySelector(".feedback");
+    let locked = false;
+    item.a.forEach((txt, i) => {
+      const b = document.createElement("button");
+      b.textContent = txt;
+      b.addEventListener("click", () => {
+        if (locked || b.classList.contains("wrong")) return;
+        if (i === item.ok) {
+          locked = true; b.classList.add("right");
+          S.q++; save(); renderNotes($("notes"));
+          fb.textContent = `Richtig! Notiz ${LETTERS[S.q - 1]} = ${item.digit}`;
+          burst(25);
+          setTimeout(renderQuiz, 1100);
+        } else {
+          b.classList.add("wrong");
+          fb.textContent = item.no || "Knapp daneben. Versuch's nochmal.";
+        }
+      });
+      ab.appendChild(b);
+    });
+  }
+
+  // ---------- safe ----------
+  let entry = "";
+  function renderSafe() {
+    renderNotes($("notes2"));
+    if (!$("formulas").childElementCount) $("formulas").innerHTML = FORMULAS.map((f, i) => `<li><b>${i + 1}. Ziffer</b>${f}</li>`).join("");
+    $("display").innerHTML = CODE.split("").map((_, i) => `<span>${entry[i] ?? "·"}</span>`).join("");
+    const kp = $("keypad");
+    if (!kp.childElementCount) {
+      ["1","2","3","4","5","6","7","8","9","←","0","OK"].forEach(k => {
+        const b = document.createElement("button");
+        b.textContent = k; if (k === "OK") b.className = "go";
+        b.setAttribute("aria-label", k === "←" ? "Löschen" : k === "OK" ? "Öffnen" : k);
+        b.addEventListener("click", () => press(k));
+        kp.appendChild(b);
+      });
+    }
+  }
+  function press(k) {
+    if (k === "←") entry = entry.slice(0, -1);
+    else if (k === "OK") return tryOpen();
+    else if (entry.length < CODE.length) entry += k;
+    renderSafe();
+  }
+  function tryOpen() {
+    const safe = $("safe");
+    if (entry === CODE) {
+      $("smsg").textContent = "Klick. Der Tresor ist offen!";
+      S.safe = true; save(); burst(120);
+      setTimeout(() => { renderParcels(); show("v-parcels"); }, 900);
+    } else {
+      const right = [...CODE].filter((c, i) => entry[i] === c).length;
+      $("smsg").textContent = `Falscher Code. ${right} von ${CODE.length} Ziffern stimmen. Rechne nochmal nach.`;
+      safe.classList.remove("shake"); void safe.offsetWidth; safe.classList.add("shake");
+      entry = ""; renderSafe();
+    }
+  }
+  document.addEventListener("keydown", (e) => {
+    if ($("v-safe").hidden || e.target.tagName === "BUTTON") return;
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === "Backspace") press("←");
+    else if (e.key === "Enter") press("OK");
+  });
+
+  // ---------- parcels ----------
+  const allOpen = () => ORDER.every(k => S.opened[k]);
+  function renderParcels() {
+    const box = $("parcels"); box.innerHTML = "";
+    ORDER.forEach((k, i) => {
+      const w = W[k], open = !!S.opened[k];
+      const b = document.createElement("button");
+      b.className = "parcel" + (open ? " open" : "");
+      b.innerHTML = `${open ? ICON[k] : ICON.parcel(w.paper)}
+        <span class="stack" style="gap:4px;min-width:0">
+          <span class="state">${open ? "✓ Ausgepackt" : "Päckchen " + (i + 1)}</span>
+          <h3>${open ? esc(w.short) : "Noch verpackt"}</h3>
+          <span class="small">${open ? "Nochmal ansehen" : "Tippen zum Auspacken"}</span>
+        </span>`;
+      b.addEventListener("click", () => openGame(k));
+      box.appendChild(b);
+    });
+    const n = ORDER.filter(k => S.opened[k]).length;
+    $("progress").textContent = n === 3 ? "Alle drei ausgepackt" : `${n} von 3 ausgepackt`;
+    $("to-duel").disabled = n < 3;
+  }
+  $("to-duel").addEventListener("click", startDuel);
+
+  // ---------- games (neutral wording while playing; reveal after) ----------
+  let cleanup = null;
+  const stopGame = () => { if (cleanup) { cleanup(); cleanup = null; } };
+  function openGame(k) {
+    stopGame();
+    const st = $("stage"); st.innerHTML = "";
+    show("v-game");
+    const n = ORDER.indexOf(k) + 1;
+    if (S.opened[k]) { st.innerHTML = `<p class="eyebrow">Päckchen ${n}</p>`; reveal(k); return; }
+    ({ beton: gameBeton, graffiti: gameGraffiti, sieb: gameSieb })[k](st, n, () => {
+      S.opened[k] = true; save(); burst(80);
+      reveal(k);
+    });
+  }
+  function reveal(k) {
+    const w = W[k], st = $("stage");
+    const d = document.createElement("div");
+    d.className = "reveal pop";
+    d.innerHTML = `${ICON[k]}<div class="txt">
+        <p class="eyebrow">Ausgepackt</p>
+        <h2>${esc(w.name)}</h2>
+        <p class="small">${esc(w.where)}</p>
+        <ul class="points">${w.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+      </div>`;
+    st.appendChild(d);
+    const r = document.createElement("div");
+    r.className = "row";
+    r.innerHTML = `<button id="next">${allOpen() ? "Zum Duell" : "Zurück zum Tresor"}</button>`;
+    st.appendChild(r);
+    r.querySelector("#next").addEventListener("click", () => { stopGame(); allOpen() ? startDuel() : backToParcels(); });
+    d.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" });
+  }
+  function backToParcels() { stopGame(); renderParcels(); show("v-parcels"); }
+  $("back").addEventListener("click", backToParcels);
+  const head = (n, task, intro) => `<p class="eyebrow">Päckchen ${n} auspacken</p><h2>${task}</h2><p>${intro}</p>`;
+
+  function gameBeton(st, n, onWin) {
+    st.innerHTML = head(n, "Fingerspitzengefühl", "Halte den Knopf gedrückt, um die Form zu füllen. Lass genau dann los, wenn der Pegel zwischen den blauen Linien ist. Drei Formen.") + `
+      <div class="molds" id="molds"></div>
+      <button class="pour" id="pour">Gedrückt halten</button>
+      <p class="meter" id="bmsg" aria-live="polite">Form 1 von 3</p>`;
+    const molds = st.querySelector("#molds"), pour = st.querySelector("#pour"), msg = st.querySelector("#bmsg");
+    // silicone molds: cavity spans y 20..130 in a 100x150 viewBox
+    const SHAPES = [
+      "M16 22 H84 V92 A34 38 0 0 1 16 92 Z",
+      "M50 20 L88 42 L88 108 L50 130 L12 108 L12 42 Z",
+      "M50 130 C8 100 6 58 26 42 C38 33 50 42 50 54 C50 42 62 33 74 42 C94 58 92 100 50 130 Z"
+    ];
+    const SIL = ["#ff8cc8", "#7cc6ee", "#ffd23f"];
+    const uid = Date.now().toString(36);
+    const surf = (lvl) => 130 - Math.min(100, lvl) / 100 * 110;
+    const wave = (lvl, t, a) => {
+      const y0 = surf(lvl);
+      let d = `M0 150 L0 ${y0.toFixed(1)}`;
+      for (let x = 0; x <= 100; x += 5) d += ` L${x} ${(y0 + Math.sin(x / 100 * Math.PI * 3 + t * 7) * a).toFixed(1)}`;
+      return d + " L100 150 Z";
+    };
+    const speck = () => { let s = ""; const cols = ["#FF48B0", "#FFD23F", "#0078BF", "#FBFBF8", "#1D1F24"]; for (let k = 0; k < 26; k++) s += `<circle cx="${(10 + Math.random() * 80).toFixed(1)}" cy="${(25 + Math.random() * 105).toFixed(1)}" r="${(1 + Math.random() * 2.6).toFixed(1)}" fill="${cols[k % 5]}"/>`; return s; };
+    const M = SHAPES.map((shape, j) => {
+      const lo = 42 + Math.random() * 30, hi = lo + 13;
+      const yHi = surf(hi), yLo = surf(lo);
+      const el = document.createElement("div");
+      el.className = "mold";
+      el.innerHTML = `<svg viewBox="0 0 100 150" aria-hidden="true">
+        <defs>
+          <clipPath id="cp${uid}${j}"><path d="${shape}"/></clipPath>
+          <linearGradient id="lq${uid}${j}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4d5d7"/><stop offset="1" stop-color="#8E9093"/></linearGradient>
+        </defs>
+        <path d="${shape}" fill="none" stroke="${SIL[j]}" stroke-width="14" stroke-linejoin="round"/>
+        <path d="${shape}" fill="none" stroke="#1D1F24" stroke-width="2" stroke-linejoin="round" transform="translate(50 75) scale(1.14) translate(-50 -75)" opacity=".5"/>
+        <path d="${shape}" fill="#f4f2ec"/>
+        <g clip-path="url(#cp${uid}${j})">
+          <rect x="0" y="${yHi.toFixed(1)}" width="100" height="${(yLo - yHi).toFixed(1)}" fill="rgba(0,120,191,.16)"/>
+          <path class="liq" d="${wave(0, 0, 0)}" fill="url(#lq${uid}${j})"/>
+          <g class="terr" opacity="0">${speck()}</g>
+          <line x1="0" x2="100" y1="${yHi.toFixed(1)}" y2="${yHi.toFixed(1)}" stroke="#0078BF" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <line x1="0" x2="100" y1="${yLo.toFixed(1)}" y2="${yLo.toFixed(1)}" stroke="#0078BF" stroke-width="1.5" stroke-dasharray="4 3"/>
+        </g>
+        <path d="${shape}" fill="none" stroke="#1D1F24" stroke-width="3" stroke-linejoin="round"/>
+        <rect class="stream" x="47" y="0" width="6" height="0" rx="3" fill="#a9abae"/>
+        <text class="okmark" x="50" y="88" text-anchor="middle" font-family="Bricolage Grotesque, Arial Black, sans-serif" font-weight="800" font-size="30" fill="#1E8C5A" opacity="0">✓</text>
+      </svg>`;
+      molds.appendChild(el);
+      return { el, lo, hi, level: 0, liq: el.querySelector(".liq"), stream: el.querySelector(".stream"), terr: el.querySelector(".terr"), okm: el.querySelector(".okmark") };
+    });
+    let i = 0, holding = false, raf = 0, last = 0, finished = false, idle = 0;
+    M[0].el.classList.add("active");
+    const draw = (m, t, a) => {
+      m.liq.setAttribute("d", wave(m.level, t, a));
+      const y = surf(m.level);
+      m.stream.setAttribute("height", holding ? Math.max(0, y).toFixed(1) : "0");
+    };
+    const tick = (t) => {
+      const m = M[i];
+      if (!m) return;
+      if (holding) {
+        const dt = Math.min(0.05, (t - last) / 1000); last = t;
+        m.level += dt * (32 + m.level * 0.6);
+        if (m.level >= 100) { draw(m, t / 1000, 3); release(); return; }
+      }
+      draw(m, t / 1000, holding ? 2.6 : (m.level > 0 ? 0.8 : 0));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const pressDown = (e) => {
+      if (finished || holding) return;
+      e.preventDefault();
+      holding = true; pour.classList.add("holding");
+      last = performance.now();
+    };
+    const release = () => {
+      if (!holding) return;
+      holding = false; pour.classList.remove("holding");
+      const m = M[i];
+      m.stream.setAttribute("height", "0");
+      if (m.level >= m.lo && m.level <= m.hi) {
+        m.liq.setAttribute("d", wave(m.level, 0, 0));
+        m.terr.setAttribute("opacity", "1"); m.okm.setAttribute("opacity", "1");
+        m.el.classList.remove("active"); m.el.classList.add("ok");
+        i++;
+        if (i === 3) { finished = true; pour.disabled = true; cancelAnimationFrame(raf); msg.textContent = "Alle drei genau getroffen!"; onWin(); return; }
+        M[i].el.classList.add("active");
+        msg.textContent = `Perfekt! Form ${i + 1} von 3`;
+      } else {
+        msg.textContent = m.level > m.hi ? "Zu viel, das ist übergelaufen. Nochmal!" : "Zu wenig. Nochmal!";
+        m.el.classList.remove("spill"); void m.el.offsetWidth; m.el.classList.add("spill");
+        m.level = 0;
+      }
+    };
+    pour.addEventListener("pointerdown", pressDown);
+    pour.addEventListener("pointerup", release);
+    pour.addEventListener("pointerleave", release);
+    pour.addEventListener("pointercancel", release);
+    pour.addEventListener("contextmenu", e => e.preventDefault());
+    pour.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) pressDown(e); });
+    pour.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") release(); });
+    cleanup = () => { holding = false; cancelAnimationFrame(raf); };
+  }
+
+  function gameGraffiti(st, n, onWin) {
+    st.innerHTML = head(n, "Freilegen", "Unter der grauen Fläche versteckt sich etwas. Wisch mit Finger oder Maus darüber, bis es zu sehen ist.") + `
+      <div class="wall" id="wall"><canvas class="piece" id="piece" role="img" aria-label="Graffiti-Piece: Happy Birthday"></canvas><canvas id="spray"></canvas></div>
+      <p class="meter" id="gmsg" aria-live="polite">Freigelegt: 0 %</p>`;
+    const wall = st.querySelector("#wall"), cv = st.querySelector("#spray"), msg = st.querySelector("#gmsg");
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = wall.clientWidth, hh = wall.clientHeight;
+    drawPiece(st.querySelector("#piece"), w, hh, dpr);
+    cv.width = w * dpr; cv.height = hh * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = "#c9cacd"; ctx.fillRect(0, 0, w, hh);
+    for (let i = 0; i < w * hh / 40; i++) {
+      ctx.fillStyle = Math.random() < .5 ? "#b9babe" : "#d6d7da";
+      ctx.fillRect(Math.random() * w, Math.random() * hh, 2, 2);
+    }
+    let down = false, done = false, lastCheck = 0;
+    const spray = (x, y) => {
+      ctx.globalCompositeOperation = "destination-out";
+      for (let k = 0; k < 34; k++) {
+        const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * 30;
+        ctx.beginPath(); ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, 1 + Math.random() * 3.2, 0, 7); ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(x, y, 14, 0, 7); ctx.fill();
+    };
+    const check = () => {
+      const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      let clear = 0, tot = 0;
+      for (let i = 3; i < d.length; i += 4 * 37) { tot++; if (d[i] < 40) clear++; }
+      const pct = Math.round(clear / tot * 100);
+      msg.textContent = `Freigelegt: ${pct} %`;
+      if (pct >= 62 && !done) {
+        done = true;
+        ctx.globalCompositeOperation = "destination-out"; ctx.fillRect(0, 0, w, hh);
+        msg.textContent = "Freigelegt: 100 %. Saubere Arbeit!";
+        onWin();
+      }
+    };
+    const pos = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    cv.addEventListener("pointerdown", (e) => { if (done) return; down = true; cv.setPointerCapture(e.pointerId); spray(...pos(e)); });
+    cv.addEventListener("pointermove", (e) => {
+      if (!down || done) return;
+      spray(...pos(e));
+      const t = performance.now(); if (t - lastCheck > 250) { lastCheck = t; check(); }
+    });
+    const up = () => { if (down) { down = false; if (!done) check(); } };
+    cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+    cleanup = () => {};
+  }
+
+  // Graffiti piece: concrete wall, spray cloud, 3D block, double outline, red fill with shines, drips, crown, sparkles.
+  async function drawPiece(c, w, h, dpr) {
+    const FONT = '"Sedgwick Ave Display", "Arial Black", sans-serif';
+    try { await Promise.race([document.fonts.load('80px "Sedgwick Ave Display"', "HAPPY BIRTHDAY"), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
+    c.width = w * dpr; c.height = h * dpr;
+    const g = c.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+    // wall: concrete panels with grime
+    g.fillStyle = "#4a4d55"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < w * h / 18; i++) { g.fillStyle = `rgba(${rnd() < .5 ? "0,0,0" : "255,255,255"},${rnd() * .07})`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
+    g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 2;
+    for (let x = w / 3; x < w; x += w / 3) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+    // faint old tags in the background
+    g.save(); g.font = `${h * .12}px ${FONT}`; g.fillStyle = "rgba(255,255,255,.08)";
+    g.fillText("otter", w * .06, h * .2); g.fillText("du&ich", w * .62, h * .92); g.restore();
+
+    // background spray cloud
+    g.save(); g.filter = "blur(14px)";
+    [["#0078BF", .3, .45, .32], ["#FFD23F", .62, .55, .26], ["#0078BF", .78, .4, .22]].forEach(([col, x, y, r]) => {
+      g.fillStyle = col; g.globalAlpha = .85; g.beginPath(); g.ellipse(w * x, h * y, w * r, h * .36, 0, 0, 7); g.fill();
+    });
+    g.restore();
+
+    // letters
+    const cx = w / 2;
+    g.font = `100px ${FONT}`;
+    const longest = g.measureText("BIRTHDAY").width / 100;
+    const fs = Math.min(h * .36, (w * .84) / longest);
+    g.font = `${fs}px ${FONT}`;
+    const LINES = [{ t: "HAPPY", y: h * .3 }, { t: "BIRTHDAY", y: h * .67 }];
+    LINES.forEach(L => { L.w = g.measureText(L.t).width; });
+    const tw = LINES[1].w, cy = LINES[1].y, tw1 = LINES[0].w, cy1 = LINES[0].y;
+    g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round"; g.miterLimit = 2;
+    const each = (fn) => LINES.forEach(L => { g.save(); g.translate(cx, L.y); g.rotate(-0.07); fn(L); g.restore(); });
+
+    // outer white "second outline" + glow
+    each(L => { g.shadowColor = "rgba(255,72,176,.9)"; g.shadowBlur = 20; g.strokeStyle = "#FBFBF8"; g.lineWidth = fs * .2; g.strokeText(L.t, 0, 0); });
+    // 3D block
+    each(L => { for (let i = Math.round(fs * .1); i > 0; i--) { g.strokeStyle = "#1D1F24"; g.lineWidth = fs * .1; g.strokeText(L.t, i, i); } });
+    // black outline
+    each(L => { g.strokeStyle = "#1D1F24"; g.lineWidth = fs * .1; g.strokeText(L.t, 0, 0); });
+
+    // fill with gradient + shines (offscreen so highlights stay inside the letters)
+    const off = document.createElement("canvas"); off.width = c.width; off.height = c.height;
+    const o = off.getContext("2d"); o.setTransform(dpr, 0, 0, dpr, 0, 0);
+    o.font = g.font; o.textAlign = "center"; o.textBaseline = "middle";
+    LINES.forEach(L => {
+      o.save(); o.translate(cx, L.y); o.rotate(-0.07);
+      const grad = o.createLinearGradient(0, -fs * .45, 0, fs * .45);
+      grad.addColorStop(0, "#ff6a3d"); grad.addColorStop(.35, "#ff1f3d"); grad.addColorStop(.75, "#c4002b"); grad.addColorStop(1, "#ff48b0");
+      o.fillStyle = grad; o.fillText(L.t, 0, 0); o.restore();
+    });
+    o.globalCompositeOperation = "source-atop";
+    LINES.forEach(L => {
+      o.fillStyle = "rgba(255,255,255,.85)";
+      for (let i = 0; i < 7; i++) { // diagonal shine strokes
+        const x = cx - L.w / 2 + rnd() * L.w, y = L.y - fs * .3 + rnd() * fs * .15;
+        o.save(); o.translate(x, y); o.rotate(-.6); o.fillRect(0, 0, fs * .03, fs * (.08 + rnd() * .12)); o.restore();
+      }
+      o.fillStyle = "rgba(255,210,63,.55)"; // yellow band
+      o.save(); o.translate(cx, L.y); o.rotate(-0.07); o.fillRect(-w, fs * .05, w * 2, fs * .07); o.restore();
+      o.fillStyle = "rgba(255,255,255,.9)"; // bubbles
+      for (let i = 0; i < 10; i++) { o.beginPath(); o.arc(cx - L.w / 2 + rnd() * L.w, L.y - fs * .25 + rnd() * fs * .5, 1 + rnd() * 2.2, 0, 7); o.fill(); }
+    });
+    g.drawImage(off, 0, 0, w, h);
+
+    // drips from the bottom edge of the letters
+    const data = o.getImageData(0, 0, off.width, off.height).data;
+    const solid = (x, y) => { const px = Math.round(x * dpr), py = Math.round(y * dpr); if (px < 0 || py < 0 || px >= off.width || py >= off.height) return false; return data[(py * off.width + px) * 4 + 3] > 200; };
+    let drips = 0;
+    for (let t = 0; t < 0 && drips < 7; t++) { // drips disabled
+      const x = cx - tw * .45 + rnd() * tw * .9;
+      let y = cy + fs * .5;
+      while (y > cy && !solid(x, y)) y--;
+      if (y <= cy + fs * .1) continue;
+      const len = 12 + rnd() * h * .14, wd = 4 + rnd() * 4;
+      g.fillStyle = "#c4002b"; g.strokeStyle = "#1D1F24"; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(x - wd / 2, y - 2); g.lineTo(x - wd / 2, y + len); g.arc(x, y + len, wd / 2 + 1, Math.PI, 0, true); g.lineTo(x + wd / 2, y - 2); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "rgba(255,255,255,.7)"; g.fillRect(x - wd / 4, y + 3, 1.5, len * .5);
+      drips++;
+    }
+
+    // party hat on the first letter
+    const kx = cx - tw1 * .4, ky = cy1 - fs * .55, ks = fs * .38;
+    g.save(); g.translate(kx, ky); g.rotate(-.3);
+    g.lineJoin = "round"; g.strokeStyle = "#1D1F24"; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(-ks * .32, ks * .4); g.lineTo(0, -ks * .5); g.lineTo(ks * .32, ks * .4); g.closePath();
+    g.fillStyle = "#0078BF"; g.fill();
+    g.save(); g.clip(); g.fillStyle = "#FFD23F";
+    for (let s = -2; s < 4; s++) { g.save(); g.translate(0, s * ks * .22); g.rotate(-.5); g.fillRect(-ks, 0, ks * 2, ks * .08); g.restore(); }
+    g.fillStyle = "#FBFBF8";
+    [[-.08, .2], [.1, .05], [-.02, -.15], [.12, .3]].forEach(([dx, dy]) => { g.beginPath(); g.arc(dx * ks, dy * ks, ks * .035, 0, 7); g.fill(); });
+    g.restore();
+    g.beginPath(); g.moveTo(-ks * .32, ks * .4); g.lineTo(0, -ks * .5); g.lineTo(ks * .32, ks * .4); g.closePath(); g.stroke();
+    g.fillStyle = "#FF48B0"; g.beginPath(); g.ellipse(0, ks * .4, ks * .38, ks * .07, 0, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = "#FF48B0"; g.beginPath(); g.arc(0, -ks * .5, ks * .09, 0, 7); g.fill(); g.stroke();
+    g.restore();
+
+    // sparkles
+    const star = (x, y, r) => { g.fillStyle = "#FBFBF8"; g.beginPath(); g.moveTo(x, y - r); g.quadraticCurveTo(x, y, x + r, y); g.quadraticCurveTo(x, y, x, y + r); g.quadraticCurveTo(x, y, x - r, y); g.quadraticCurveTo(x, y, x, y - r); g.fill(); };
+    star(cx + tw1 * .58, cy1 - fs * .3, fs * .12); star(cx + tw1 * .7, cy1 + fs * .05, fs * .06); star(cx - tw * .52, cy + fs * .35, fs * .08);
+  }
+
+  function gameSieb(st, n, onWin) {
+    const shapes = [
+      { c: "#FFD23F", svg: `<circle cx="50" cy="52" r="30"/>` },
+      { c: "#FF48B0", svg: `<path d="M50 80 C20 60 22 34 38 32 C46 31 50 38 50 42 C50 38 54 31 62 32 C78 34 80 60 50 80Z"/>` },
+      { c: "#0078BF", svg: `<text x="50" y="94" text-anchor="middle" font-family="Bricolage Grotesque, Arial Black, sans-serif" font-weight="800" font-size="14">DU &amp; ICH</text>` }
+    ];
+    st.innerHTML = head(n, "Timing", "Der Rahmen wackelt hin und her. Drück auf <strong>Jetzt!</strong>, wenn die pinken Kreuze genau über den schwarzen liegen. Drei Farben, ein Bild.") + `
+      <div class="press" id="press">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <pattern id="mesh" width="3" height="3" patternUnits="userSpaceOnUse"><path d="M0 0 L3 3 M3 0 L0 3" stroke="#6d6a5c" stroke-width=".35"/></pattern>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0 H0 V20" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/></pattern>
+            <filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
+              <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="3" result="n"/>
+              <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" result="d"/>
+              <feComponentTransfer in="n" result="speck"><feFuncA type="discrete" tableValues="1 1 1 1 1 1 0 1"/></feComponentTransfer>
+              <feComposite in="d" in2="speck" operator="in"/>
+            </filter>
+            <clipPath id="shirtclip"><path id="shirtpath" d="M75 35 L50 47 L28 76 L50 88 L60 78 V186 H140 V78 L150 88 L172 76 L150 47 L125 35 C118 48 82 48 75 35Z"/></clipPath>
+          </defs>
+          <rect width="200" height="200" fill="#2b2e35"/><rect width="200" height="200" fill="url(#grid)"/>
+          <rect x="14" y="14" width="172" height="182" rx="8" fill="#d9d3c7" stroke="#1D1F24" stroke-width="2"/>
+          <use href="#shirtpath" fill="#FBFBF8" stroke="#1D1F24" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M75 35 C82 48 118 48 125 35" fill="none" stroke="#1D1F24" stroke-width="2"/>
+          <g id="printed" clip-path="url(#shirtclip)"></g>
+          <g stroke="#1D1F24" stroke-width="1.6" fill="none"><circle cx="100" cy="24" r="5"/><path d="M92 24 H108 M100 16 V32"/><circle cx="100" cy="190" r="4"/><path d="M93 190 H107 M100 184 V196"/></g>
+          <g id="frame">
+            <rect x="30" y="18" width="140" height="178" rx="3" fill="url(#mesh)" opacity=".55"/>
+            <rect x="30" y="18" width="140" height="178" rx="3" fill="rgba(232,228,201,.28)"/>
+            <g id="stencil" opacity=".7"></g>
+            <rect x="30" y="18" width="140" height="178" rx="3" fill="none" stroke="#b07a3e" stroke-width="9"/>
+            <rect x="30" y="18" width="140" height="178" rx="3" fill="none" stroke="#1D1F24" stroke-width="1.5"/>
+            <g stroke="#FF48B0" stroke-width="1.8" fill="none"><circle cx="100" cy="24" r="5"/><path d="M92 24 H108 M100 16 V32"/><circle cx="100" cy="190" r="4"/><path d="M93 190 H107 M100 184 V196"/></g>
+          </g>
+          <g id="squeegee" opacity="0">
+            <rect x="36" y="-4" width="128" height="6" rx="2" fill="#1D1F24"/>
+            <rect x="44" y="-12" width="112" height="9" rx="3" fill="#c98f4c" stroke="#1D1F24" stroke-width="1.5"/>
+          </g>
+        </svg>
+      </div>
+      <button class="pour" id="pull">Jetzt!</button>
+      <p class="meter" id="pmsg" aria-live="polite">Farbe 1 von 3 · Gelb</p>`;
+    const SVGNS = "http://www.w3.org/2000/svg";
+    const printed = st.querySelector("#printed"), frame = st.querySelector("#frame"), stencil = st.querySelector("#stencil"),
+          sq = st.querySelector("#squeegee"), pull = st.querySelector("#pull"), msg = st.querySelector("#pmsg");
+    const names = ["Gelb", "Pink", "Blau"];
+    const AMP = 26, INNER = "translate(55 52) scale(.9)";
+    let i = 0, raf = 0, t0 = performance.now(), off = 0, errs = [], done = false, phase = "swing", pt = 0, held = 0;
+    const setStencil = () => { stencil.innerHTML = `<g transform="${INNER}" fill="${shapes[i].c}">${shapes[i].svg}</g>`; };
+    setStencil();
+    const T_PULL = reduced() ? 150 : 420, T_LIFT = reduced() ? 100 : 320;
+    const loop = (t) => {
+      if (phase === "swing") {
+        const sp = (reduced() ? 0.8 : 1.3) + i * 0.5;
+        off = Math.sin((t - t0) / 1000 * sp * Math.PI) * AMP;
+        frame.setAttribute("transform", `translate(${off.toFixed(2)} 0)`);
+        frame.setAttribute("opacity", "1");
+      } else if (phase === "pull") {
+        const k = Math.min(1, (t - pt) / T_PULL);
+        sq.setAttribute("opacity", "1");
+        sq.setAttribute("transform", `translate(${held.toFixed(2)} ${(22 + k * 168).toFixed(1)})`);
+        if (k >= 1) { laydown(); phase = "lift"; pt = t; }
+      } else if (phase === "lift") {
+        const k = Math.min(1, (t - pt) / T_LIFT);
+        sq.setAttribute("opacity", String(1 - k));
+        frame.setAttribute("opacity", String(1 - k));
+        frame.setAttribute("transform", `translate(${held.toFixed(2)} ${(-k * 14).toFixed(1)})`);
+        if (k >= 1) next(t);
+      }
+      if (phase !== "done") raf = requestAnimationFrame(loop);
+    };
+    const laydown = () => {
+      const g = document.createElementNS(SVGNS, "g");
+      g.setAttribute("transform", `translate(${held.toFixed(2)} 0)`);
+      g.setAttribute("style", "mix-blend-mode:multiply");
+      g.setAttribute("filter", "url(#ink)");
+      g.innerHTML = `<g transform="${INNER}" fill="${shapes[i].c}">${shapes[i].svg}</g>`;
+      printed.appendChild(g);
+    };
+    const next = (t) => {
+      i++;
+      if (i === 3) {
+        phase = "done"; pull.disabled = true;
+        const acc = Math.round(100 - errs.reduce((a, b) => a + b, 0) / 3 * 100);
+        msg.textContent = `Genauigkeit ${acc} %. ${acc > 80 ? "Wie vom Profi." : "Der leichte Versatz ist Absicht. Nennt sich Charme."}`;
+        onWin();
+        return;
+      }
+      setStencil(); phase = "swing"; t0 = t; pull.disabled = false;
+      msg.textContent = `Farbe ${i + 1} von 3 · ${names[i]}`;
+    };
+    raf = requestAnimationFrame(loop);
+    pull.addEventListener("click", () => {
+      if (phase !== "swing" || done) return;
+      held = off; errs.push(Math.abs(off) / AMP);
+      pull.disabled = true; phase = "pull"; pt = performance.now();
+    });
+    cleanup = () => { phase = "done"; cancelAnimationFrame(raf); };
+  }
+
+  // ---------- duel: Beton vs Siebdruck, winner vs Graffiti ----------
+  let duel = null;
+  function startDuel() {
+    duel = { round: 1, a: "beton", b: "sieb", out: [] };
+    renderDuel(); show("v-duel");
+  }
+  function renderBracket() {
+    $("bracket").innerHTML = ORDER.map(k => `<span class="${duel.out.includes(k) ? "out" : ""}">${esc(W[k].short)}</span>`).join("");
+  }
+  function fighterHTML(k) {
+    const w = W[k];
+    return `${ICON[k]}<strong>${esc(w.short)}</strong><span class="small">${esc(w.points[0])}</span>`;
+  }
+  function renderDuel() {
+    renderBracket();
+    const arena = $("arena");
+    if (duel.round === 3) {
+      const k = duel.winner, w = W[k];
+      arena.innerHTML = `<div class="final pop">
+          <p class="round">Dein Sieger</p>
+          <div class="row" style="gap:16px">${ICON[k].replace("<svg ", '<svg width="80" height="80" ')}<h2>${esc(w.name)}</h2></div>
+          <p>Soll es der werden? Danach buche ich den Termin für uns.</p>
+          <div class="row"><button id="yes">Ja, das wird's</button><button class="ghost" id="again">Duell nochmal</button></div>
+        </div>`;
+      arena.querySelector("#yes").addEventListener("click", () => { S.choice = k; save(); renderTicket(); show("v-ticket"); burst(160); });
+      arena.querySelector("#again").addEventListener("click", startDuel);
+      return;
+    }
+    arena.innerHTML = `<p class="round">${duel.round === 1 ? "Runde 1 von 2" : "Finale"}</p>
+      <div class="duel">
+        <button class="fighter" data-k="${duel.a}">${fighterHTML(duel.a)}</button>
+        <span class="vs" aria-hidden="true">VS</span>
+        <button class="fighter" data-k="${duel.b}">${fighterHTML(duel.b)}</button>
+      </div>`;
+    let picked = false;
+    arena.querySelectorAll(".fighter").forEach(btn => btn.addEventListener("click", () => {
+      if (picked) return; picked = true;
+      const win = btn.dataset.k, lose = win === duel.a ? duel.b : duel.a;
+      btn.classList.add("win");
+      arena.querySelector(`[data-k="${lose}"]`).classList.add("lose");
+      duel.out.push(lose); renderBracket(); burst(30);
+      setTimeout(() => {
+        if (duel.round === 1) { duel.round = 2; duel.a = win; duel.b = "graffiti"; }
+        else { duel.round = 3; duel.winner = win; }
+        renderDuel();
+      }, reduced() ? 300 : 900);
+    }));
+  }
+
+  // ---------- voucher ----------
+  function renderTicket() {
+    const w = W[S.choice];
+    $("t-icon").innerHTML = ICON[S.choice];
+    $("t-title").textContent = w.name;
+    $("t-points").innerHTML = w.points.map(p => `<li>${esc(p)}</li>`).join("");
+    $("t-stub").innerHTML = [["Ort", w.where], ["Zeit", w.when], ["Mitnehmen", w.take]]
+      .map(([a, b]) => `<div class="stub">${esc(a.toUpperCase())}<b>${esc(b)}</b></div>`).join("");
+  }
+  $("restart").addEventListener("click", () => { S.choice = null; save(); startDuel(); });
+
+  // ---------- confetti ----------
+  const cf = $("confetti"), cx = cf.getContext("2d");
+  let parts = [], craf = 0;
+  function burst(n) {
+    if (reduced()) return;
+    cf.width = innerWidth; cf.height = innerHeight;
+    const cols = ["#FF48B0", "#0078BF", "#FFD23F", "#8E9093"];
+    for (let i = 0; i < n; i++) parts.push({ x: innerWidth / 2, y: innerHeight / 3, vx: (Math.random() - .5) * 12, vy: -Math.random() * 10 - 3, s: 4 + Math.random() * 6, c: cols[i % 4], r: Math.random() * 6, life: 120 + Math.random() * 60 });
+    if (!craf) craf = requestAnimationFrame(stepC);
+  }
+  function stepC() {
+    cx.clearRect(0, 0, cf.width, cf.height);
+    parts = parts.filter(p => p.life-- > 0 && p.y < cf.height + 20);
+    parts.forEach(p => { p.vy += .3; p.x += p.vx; p.y += p.vy; p.r += .1; cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); cx.restore(); });
+    craf = parts.length ? requestAnimationFrame(stepC) : 0;
+    if (!craf) cx.clearRect(0, 0, cf.width, cf.height);
+  }
+
+  // ---------- hidden jumps for testing: #intro #quiz #tresor #paeckchen #duell #gutschein ----------
+  function jump(h) {
+    const all = () => ORDER.forEach(k => { S.opened[k] = true; });
+    switch (h) {
+      case "#intro": show("v-intro"); return true;
+      case "#quiz": stopGame(); S.started = true; S.q = 0; S.safe = false; save(); renderQuiz(); show("v-quiz"); return true;
+      case "#tresor": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = false; save(); entry = ""; renderSafe(); show("v-safe"); return true;
+      case "#paeckchen": case "#umschlaege": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = true; S.opened = {}; S.choice = null; save(); renderParcels(); show("v-parcels"); return true;
+      case "#duell": case "#wahl": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = true; all(); S.choice = null; save(); startDuel(); return true;
+      case "#gutschein": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = true; all(); S.choice = S.choice || "sieb"; save(); renderTicket(); show("v-ticket"); return true;
+    }
+    return false;
+  }
+  addEventListener("hashchange", () => jump(location.hash));
+
+  // ---------- boot: resume where she left off ----------
+  if (jump(location.hash)) {}
+  else if (S.choice && W[S.choice]) { renderTicket(); show("v-ticket"); }
+  else if (S.safe && allOpen()) { startDuel(); }
+  else if (S.safe) { renderParcels(); show("v-parcels"); }
+  else if (S.started) { renderQuiz(); if (S.q < QUIZ.length) show("v-quiz"); }
+  else show("v-intro");
+})();
+</script>
+
+</body>
+</html>
