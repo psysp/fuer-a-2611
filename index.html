@@ -122,6 +122,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 #qprev { grid-column: 1; grid-row: 1; }
 .navbtn { font-size: .9rem; padding: 9px 14px; background: #fff; color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
 #qprev { justify-self: start; }
+.navbtn.gotosafe { background: var(--red); color: #fff; }
 #qnext { justify-self: end; grid-column: 3; }
 @media (max-width: 420px) { .qnav { grid-template-columns: 1fr 1fr; } .qnav .eyebrow { grid-column: 1 / -1; grid-row: 1; } #qprev { grid-row: 2; grid-column: 1; } #qnext { grid-row: 2; grid-column: 2; } }
 .formulas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -562,7 +563,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     box.innerHTML = `<div class="qnav">
         <button class="navbtn" id="qprev"${qv === 0 ? " hidden" : ""} aria-label="Vorherige Frage">← Zurück</button>
         <p class="eyebrow">Frage ${qv + 1} von ${QUIZ.length}${answered ? " · beantwortet" : ""}</p>
-        <button class="navbtn" id="qnext"${answered ? "" : " hidden"} aria-label="Nächste Frage">${lastAnswered ? "Tresor →" : "Weiter →"}</button>
+        <button class="navbtn${lastAnswered ? " gotosafe" : ""}" id="qnext"${answered ? "" : " hidden"} aria-label="Nächste Frage">${lastAnswered ? "Tresor →" : "Weiter →"}</button>
       </div>
       <h3>${esc(item.q)}</h3>
       <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>`;
@@ -590,7 +591,9 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           fb.textContent = `Richtig! Notiz ${LETTERS[S.q - 1]} = ${item.digit}`;
           say(idx === QUIZ.length - 1 ? "Hey, das bin ja ich! Aber bitte nicht singen …" : pick(["Stark!", "Zack, richtig!", "Wusste ich's doch!", "Genau so war's!", "Du kennst uns echt gut!"]));
           burst(25);
-          setTimeout(() => { if (qv === idx) { qv = S.q; renderQuiz(); } }, 1100);
+          // last question: stay so the otter's line can be read; she moves on with "Tresor →"
+          if (idx === QUIZ.length - 1) setTimeout(() => { if (qv === idx) renderQuiz(); }, 700);
+          else setTimeout(() => { if (qv === idx) { qv = S.q; renderQuiz(); } }, 1100);
         } else {
           b.classList.add("wrong");
           fb.textContent = item.no || "Knapp daneben. Versuch's nochmal.";
@@ -603,7 +606,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
   // ---------- safe ----------
   let entry = "";
-  $("review").addEventListener("click", () => { qv = 0; renderQuiz(); show("v-quiz"); });
+  $("review").addEventListener("click", () => { qv = QUIZ.length - 1; renderQuiz(); show("v-quiz"); });
   function renderSafe() {
     renderNotes($("notes2"));
     if (!$("formulas").childElementCount) $("formulas").innerHTML = FORMULAS.map((f, i) => `<li><b>${i + 1}. Ziffer</b>${f}</li>`).join("");
