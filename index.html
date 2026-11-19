@@ -387,19 +387,19 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     beton: {
       name: "Dekoration aus Beton", short: "Beton", where: "Kreativstudio München", paper: "#FFD23F",
       points: ["Drei eigene Deko-Stücke aus Kreativbeton gießen", "Einfärben, marmoriert oder im Terrazzo-Look", "Getränke und Snacks inklusive"],
-      take: "3 Betonstücke, Tasche und Pflege-Kit", when: "ca. 2 Stunden",
+      take: "3 Betonstücke, Tasche und Pflege-Kit", when: "Das ganze Jahr, Termin suchen wir zusammen aus", dur: "ca. 2 Stunden",
       game: "beton"
     },
     graffiti: {
       name: "Graffiti für Beginner", short: "Graffiti", where: "KUNSTLABOR 2, Dachauer Str. 90", paper: "#9fd4f2",
       points: ["Grundtechniken lernen und auf Papier skizzieren", "Den Entwurf mit Dosen an eine echte Wand sprühen", "Teils im Innenhof, also eher ab Frühling"],
-      take: "Dein Werk als Foto, dazu Eintritt in die Ausstellung", when: "eher ab Frühling",
+      take: "Dein Werk als Foto, dazu Eintritt in die Ausstellung", when: "Ab Frühling, wenn es draußen warm ist", dur: "Erfahren wir bei der Buchung",
       game: "graffiti"
     },
     sieb: {
       name: "Siebdruck Basic", short: "Siebdruck", where: "dreierrr, Kirchenstraße 97", paper: "#ffb3dc",
       points: ["Ein eigenes Shirt im Siebdruck bedrucken", "Shirt, Farbe, Sieb und Rakel, alles inklusive"],
-      take: "Dein selbst bedrucktes Fairtrade-Shirt", when: "ca. 3 Stunden, Start 15 Uhr",
+      take: "Dein selbst bedrucktes Fairtrade-Shirt", when: "Am Wochenende, Start um 15 Uhr", dur: "ca. 3 Stunden",
       game: "sieb"
     }
   };
@@ -1305,7 +1305,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     $("t-icon").innerHTML = ICON[S.choice];
     $("t-title").textContent = w.name;
     $("t-points").innerHTML = w.points.map(p => `<li>${esc(p)}</li>`).join("");
-    $("t-stub").innerHTML = [["Ort", w.where], ["Zeit", w.when], ["Nimmst du mit nach Hause", w.take]]
+    $("t-stub").innerHTML = [["Ort", w.where], ["Wann", w.when], ["Dauer", w.dur], ["Nimmst du mit nach Hause", w.take]]
       .map(([a, b]) => `<div class="stub">${esc(a.toUpperCase())}<b>${esc(b)}</b></div>`).join("");
   }
   $("restart").addEventListener("click", () => { S.choice = null; save(); startDuel(); });
