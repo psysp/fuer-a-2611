@@ -215,6 +215,9 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .stub b { display: block; font-family: var(--body); font-size: 1rem; letter-spacing: 0; color: var(--ink); }
 #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; width: 100%; height: 100%; }
 
+.soundbtn { position: fixed; z-index: 6; top: calc(10px + env(safe-area-inset-top, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); width: 48px; height: 48px; padding: 10px; border-radius: 50%; background: var(--yellow); }
+.soundbtn svg { width: 100%; height: 100%; display: block; }
+.soundbtn[aria-pressed="false"] { background: #fff; }
 /* balloons */
 .balloons { position: fixed; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
 .balloon { position: absolute; bottom: -160px; width: 64px; animation: rise linear forwards; }
@@ -229,6 +232,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
 
 <canvas id="confetti" aria-hidden="true"></canvas>
+<button class="soundbtn" id="sound" aria-pressed="true" aria-label="Ton ausschalten"></button>
 <div class="balloons" id="balloons" aria-hidden="true"></div>
 <div class="wrap">
   <div class="otterbar">
@@ -441,6 +445,114 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     else say(qv === 0 ? LINES["v-quiz"] : "Weiter geht's!");
   }
 
+  // ---------- sound: all synthesized with Web Audio (no files) ----------
+  const SFX = (() => {
+    let ac = null, master, sfxG, musG, noiseBuf, musicOn = false, musTimer = 0, step = 0, nextT = 0;
+    let muted = false;
+    try { muted = localStorage.getItem("werkstatt-sound") === "off"; } catch (e) {}
+    const loops = {};
+    const f = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    function ensure() {
+      if (!ac) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        ac = new AC();
+        master = ac.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ac.destination);
+        sfxG = ac.createGain(); sfxG.gain.value = .5; sfxG.connect(master);
+        musG = ac.createGain(); musG.gain.value = .22; musG.connect(master);
+        noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+        const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ac.state === "suspended") ac.resume();
+      return true;
+    }
+    function tone(m, dur, o = {}) {
+      if (!ensure()) return;
+      const t = ac.currentTime + (o.when || 0);
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = o.type || "square";
+      osc.frequency.setValueAtTime(o.hz || f(m), t);
+      if (o.slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, (o.hz || f(m)) * o.slide), t + dur);
+      const v = o.vol ?? .2;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      osc.connect(g); g.connect(o.out || sfxG); osc.start(t); osc.stop(t + dur + .02);
+    }
+    function noise(dur, o = {}) {
+      if (!ensure()) return null;
+      const t = ac.currentTime + (o.when || 0);
+      const src = ac.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+      const fl = ac.createBiquadFilter(); fl.type = o.filter || "bandpass"; fl.frequency.value = o.freq || 2000; fl.Q.value = o.q || 1;
+      if (o.sweep) fl.frequency.exponentialRampToValueAtTime(o.sweep, t + (dur || 1));
+      const g = ac.createGain(); const v = o.vol ?? .25;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + (o.attack || .01));
+      if (dur) g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      src.connect(fl); fl.connect(g); g.connect(o.out || sfxG); src.start(t);
+      if (dur) src.stop(t + dur + .05);
+      return { stop: () => { try { const n = ac.currentTime; g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(g.gain.value, n); g.gain.exponentialRampToValueAtTime(.0001, n + .12); src.stop(n + .15); } catch (e) {} } };
+    }
+    const seq = (notes, bpm, o = {}) => { let w = o.when || 0; const b = 60 / bpm; notes.forEach(([m, beats]) => { if (m) tone(m, beats * b * .95, { ...o, when: w }); w += beats * b; }); return w; };
+
+    // background loop: original, cheerful chiptune (C – G – Am – F)
+    const BPM = 116, LEAD = [[76,0,79,0,84,0,79,76],[74,0,79,0,83,0,79,74],[72,0,76,0,81,0,76,72],[72,0,77,0,81,0,79,77]];
+    const BASS = [48, 43, 45, 41];
+    function schedule() {
+      const sp = 60 / BPM / 2;
+      while (nextT < ac.currentTime + .25) {
+        const bar = Math.floor(step / 8) % 4, s = step % 8, w = nextT - ac.currentTime;
+        const lead = LEAD[bar][s];
+        if (lead && (Math.floor(step / 32) % 2 || s % 2 === 0)) tone(lead, sp * .9, { when: w, vol: .09, type: "square", out: musG });
+        if (s % 2 === 0) tone(BASS[bar] + (s % 4 ? 12 : 0), sp * 1.8, { when: w, vol: .22, type: "triangle", out: musG });
+        if (s % 2 === 1) noise(.04, { when: w, vol: .05, filter: "highpass", freq: 7000, out: musG });
+        step++; nextT += sp;
+      }
+    }
+    function music(on) {
+      if (on) {
+        if (musicOn || !ensure()) return;
+        musicOn = true; step = 0; nextT = ac.currentTime + .1;
+        musG.gain.cancelScheduledValues(ac.currentTime); musG.gain.setValueAtTime(.22, ac.currentTime);
+        musTimer = setInterval(schedule, 80); schedule();
+      } else if (musicOn) { musicOn = false; clearInterval(musTimer); }
+    }
+    return {
+      unlock: ensure,
+      get muted() { return muted; },
+      setMuted(v) { muted = v; try { localStorage.setItem("werkstatt-sound", v ? "off" : "on"); } catch (e) {} if (ensure()) master.gain.setTargetAtTime(v ? 0 : 1, ac.currentTime, .05); },
+      music,
+      click() { tone(84, .05, { vol: .08, type: "square" }); },
+      correct() { seq([[72, .5], [76, .5], [79, .5], [84, 1]], 400, { vol: .16, type: "square" }); },
+      wrong() { tone(0, .35, { hz: 220, slide: .5, vol: .16, type: "sawtooth" }); tone(0, .35, { hz: 226, slide: .5, vol: .1, type: "square" }); },
+      key() { tone(88, .06, { vol: .1, type: "square" }); },
+      blow() { noise(.45, { freq: 900, sweep: 300, q: .7, vol: .35, attack: .04 }); },
+      pop() { noise(.12, { freq: 1800, q: 2, vol: .25 }); tone(0, .12, { hz: 600, slide: 2.2, vol: .08, type: "triangle" }); },
+      ding() { tone(96, .5, { vol: .12, type: "sine" }); tone(103, .4, { vol: .06, type: "sine", when: .06 }); },
+      swoosh() { noise(.35, { freq: 400, sweep: 3000, q: 1.2, vol: .25, attack: .05 }); },
+      unlock2() { tone(0, .08, { hz: 120, vol: .3, type: "square" }); tone(0, .1, { hz: 90, vol: .3, type: "square", when: .09 }); seq([[67, .5], [72, .5], [76, .5], [79, .5], [84, 2]], 300, { vol: .14, type: "square", when: .3 }); },
+      fanfare() { seq([[72, .5], [72, .5], [72, .5], [77, 1.5], [0, .25], [76, .5], [77, 2]], 260, { vol: .14, type: "square" }); seq([[48, 1.5], [53, 2], [53, 2]], 260, { vol: .18, type: "triangle" }); },
+      // Happy Birthday (traditional, public domain)
+      birthday() {
+        const was = musicOn; music(false);
+        const end = seq([[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],[67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,2],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,3]], 160, { vol: .15, type: "square" });
+        seq([[48,3],[43,3],[43,3],[48,3],[48,3],[53,3],[48,1.5],[43,1.5],[48,3]], 160, { vol: .16, type: "triangle" });
+        setTimeout(() => { if (!muted) music(true); }, end * 1000 + 400);
+      },
+      loop(name, o) { if (loops[name]) return; const n = noise(0, o); if (n) loops[name] = n; },
+      stop(name) { if (loops[name]) { loops[name].stop(); delete loops[name]; } },
+      stopAll() { Object.keys(loops).forEach(k => this.stop(k)); }
+    };
+  })();
+  // sound toggle + first-gesture unlock (browsers block audio until a tap)
+  function paintSound() {
+    const b = $("sound");
+    b.setAttribute("aria-pressed", String(!SFX.muted));
+    b.setAttribute("aria-label", SFX.muted ? "Ton einschalten" : "Ton ausschalten");
+    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="#111"/>${SFX.muted ? '<path d="M16 9l5 6M21 9l-5 6" stroke="#E8202A" stroke-width="2.5" stroke-linecap="round"/>' : '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>'}</svg>`;
+  }
+  $("sound").addEventListener("click", (e) => { e.stopPropagation(); SFX.setMuted(!SFX.muted); paintSound(); if (!SFX.muted && S.cake) SFX.music(true); });
+  paintSound();
+  document.addEventListener("pointerdown", () => { SFX.unlock(); if (S.cake && !SFX.muted) SFX.music(true); }, { capture: true });
+  document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("button"); if (b && b.id !== "sound" && !b.closest(".answers") && !b.closest(".keypad")) SFX.click(); }, { capture: true });
+
   // ---------- otter ----------
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   function say(text) {
@@ -520,12 +632,13 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   function blow(i) {
     if (!lit[i]) return;
     lit[i] = false;
+    SFX.blow();
     $("flame" + i).style.display = "none";
     const x = CANDLES[i];
     $("smoke" + i).innerHTML = `<g class="smoke"><circle cx="${x}" cy="38" r="5" fill="#bbb"/><circle cx="${x + 4}" cy="30" r="4" fill="#ccc"/><circle cx="${x - 3}" cy="24" r="3" fill="#ddd"/></g>`;
     const left = lit.filter(Boolean).length;
     if (left) { say(pick(["Pfff!", "Weiter so!", "Noch " + left + "!", "Kräftig pusten!"])); return; }
-    S.cake = true; save(); stopMic();
+    S.cake = true; save(); stopMic(); SFX.birthday();
     burst(160); balloons(12);
     say("Juhu! Alles Gute, Anke! Jetzt geht's los.");
     setTimeout(() => { renderCake(); $("intro-rest").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" }); }, 900);
@@ -615,7 +728,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           fb.textContent = `Richtig! Notiz ${LETTERS[S.q - 1]} = ${item.digit}`;
           const line = idx === QUIZ.length - 1 ? "Hey, das bin ja ich! Aber bitte nicht singen …" : pick(["Stark!", "Zack, richtig!", "Wusste ich's doch!", "Genau so war's!", "Du kennst uns echt gut!"]);
           S.yay = S.yay || {}; S.yay[idx] = line; save();
-          say(line);
+          say(line); SFX.correct();
           burst(25);
           // last question: stay so the otter's line can be read; she moves on with "Tresor →"
           if (idx === QUIZ.length - 1) setTimeout(() => { if (qv === idx) renderQuiz(); }, 700);
@@ -623,7 +736,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
         } else {
           b.classList.add("wrong");
           fb.textContent = item.no || "Knapp daneben. Versuch's nochmal.";
-          say(pick(["Hmm, nicht ganz.", "Ups!", "Denk nochmal nach …", "Daneben! Aber knapp."]));
+          say(pick(["Hmm, nicht ganz.", "Ups!", "Denk nochmal nach …", "Daneben! Aber knapp."])); SFX.wrong();
         }
       });
       ab.appendChild(b);
@@ -643,7 +756,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
         const b = document.createElement("button");
         b.textContent = k; if (k === "OK") b.className = "go";
         b.setAttribute("aria-label", k === "←" ? "Löschen" : k === "OK" ? "Öffnen" : k);
-        b.addEventListener("click", () => press(k));
+        b.addEventListener("click", () => { if (k !== "OK") SFX.key(); press(k); });
         kp.appendChild(b);
       });
     }
@@ -659,13 +772,13 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     if (entry === CODE) {
       $("smsg").textContent = "Klick. Der Tresor ist offen!";
       S.safe = true; save(); burst(160); balloons(14);
-      say("KLICK! Er ist offen! Du Rechengenie!");
+      say("KLICK! Er ist offen! Du Rechengenie!"); SFX.unlock2();
       setTimeout(() => { renderParcels(); show("v-parcels"); }, 900);
     } else {
       const right = [...CODE].filter((c, i) => entry[i] === c).length;
       $("smsg").textContent = `Falscher Code. ${right} von ${CODE.length} Ziffern stimmen. Rechne nochmal nach.`;
       safe.classList.remove("shake"); void safe.offsetWidth; safe.classList.add("shake");
-      say(right >= 4 ? "Fast! Nochmal nachrechnen." : "Hmm. Nochmal ganz in Ruhe rechnen.");
+      say(right >= 4 ? "Fast! Nochmal nachrechnen." : "Hmm. Nochmal ganz in Ruhe rechnen."); SFX.wrong();
       entry = ""; renderSafe();
     }
   }
@@ -701,7 +814,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
   // ---------- games (neutral wording while playing; reveal after) ----------
   let cleanup = null;
-  const stopGame = () => { if (cleanup) { cleanup(); cleanup = null; } };
+  const stopGame = () => { SFX.stopAll(); if (cleanup) { cleanup(); cleanup = null; } };
   function openGame(k) {
     stopGame();
     const st = $("stage"); st.innerHTML = "";
@@ -709,7 +822,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     const n = ORDER.indexOf(k) + 1;
     if (S.opened[k]) { st.innerHTML = `<p class="eyebrow">Päckchen ${n}</p>`; reveal(k); return; }
     ({ beton: gameBeton, graffiti: gameGraffiti, sieb: gameSieb })[k](st, n, () => {
-      S.opened[k] = true; save(); burst(80);
+      S.opened[k] = true; save(); burst(80); SFX.fanfare();
       say(pick(["Ausgepackt! Ooooh!", "Wow, schau mal!", "Das sieht gut aus!"]));
       reveal(k);
     });
@@ -807,12 +920,12 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     const pressDown = (e) => {
       if (finished || holding) return;
       e.preventDefault();
-      holding = true; pour.classList.add("holding");
+      holding = true; pour.classList.add("holding"); SFX.loop("pour", { freq: 500, q: 3, vol: .18, attack: .08 });
       last = performance.now();
     };
     const release = () => {
       if (!holding) return;
-      holding = false; pour.classList.remove("holding");
+      holding = false; pour.classList.remove("holding"); SFX.stop("pour");
       const m = M[i];
       m.stream.setAttribute("height", "0");
       if (m.level >= m.lo && m.level <= m.hi) {
@@ -822,10 +935,10 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
         i++;
         if (i === 3) { finished = true; pour.disabled = true; cancelAnimationFrame(raf); msg.textContent = "Alle drei genau getroffen!"; onWin(); return; }
         M[i].el.classList.add("active");
-        msg.textContent = `Perfekt! Form ${i + 1} von 3`;
+        msg.textContent = `Perfekt! Form ${i + 1} von 3`; SFX.ding();
       } else {
         msg.textContent = m.level > m.hi ? "Zu viel, das ist übergelaufen. Nochmal!" : "Zu wenig. Nochmal!";
-        m.el.classList.remove("spill"); void m.el.offsetWidth; m.el.classList.add("spill");
+        m.el.classList.remove("spill"); void m.el.offsetWidth; m.el.classList.add("spill"); SFX.wrong();
         m.level = 0;
       }
     };
@@ -878,13 +991,13 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
       }
     };
     const pos = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-    cv.addEventListener("pointerdown", (e) => { if (done) return; down = true; cv.setPointerCapture(e.pointerId); spray(...pos(e)); });
+    cv.addEventListener("pointerdown", (e) => { if (done) return; down = true; cv.setPointerCapture(e.pointerId); SFX.loop("spray", { filter: "highpass", freq: 3500, vol: .16, attack: .03 }); spray(...pos(e)); });
     cv.addEventListener("pointermove", (e) => {
       if (!down || done) return;
       spray(...pos(e));
       const t = performance.now(); if (t - lastCheck > 250) { lastCheck = t; check(); }
     });
-    const up = () => { if (down) { down = false; if (!done) check(); } };
+    const up = () => { SFX.stop("spray"); if (down) { down = false; if (!done) check(); } };
     cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
     cleanup = () => {};
   }
@@ -1088,7 +1201,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     raf = requestAnimationFrame(loop);
     pull.addEventListener("click", () => {
       if (phase !== "swing" || done) return;
-      held = off; errs.push(Math.abs(off) / AMP);
+      held = off; errs.push(Math.abs(off) / AMP); SFX.swoosh();
       pull.disabled = true; phase = "pull"; pt = performance.now();
     });
     cleanup = () => { phase = "done"; cancelAnimationFrame(raf); };
@@ -1118,7 +1231,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           <p>Soll es der werden? Danach buche ich den Termin für uns.</p>
           <div class="row"><button id="yes">Ja, das wird's</button><button class="ghost" id="again">Duell nochmal</button></div>
         </div>`;
-      arena.querySelector("#yes").addEventListener("click", () => { S.choice = k; save(); renderTicket(); show("v-ticket"); burst(200); balloons(16); });
+      arena.querySelector("#yes").addEventListener("click", () => { S.choice = k; save(); renderTicket(); show("v-ticket"); burst(200); balloons(16); SFX.fanfare(); });
       arena.querySelector("#again").addEventListener("click", startDuel);
       return;
     }
@@ -1132,7 +1245,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     arena.querySelectorAll(".fighter").forEach(btn => btn.addEventListener("click", () => {
       if (picked) return; picked = true;
       const win = btn.dataset.k, lose = win === duel.a ? duel.b : duel.a;
-      btn.classList.add("win");
+      btn.classList.add("win"); SFX.ding();
       arena.querySelector(`[data-k="${lose}"]`).classList.add("lose");
       duel.out.push(lose); renderBracket(); burst(30);
       setTimeout(() => {
@@ -1158,6 +1271,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   const cf = $("confetti"), cx = cf.getContext("2d");
   let parts = [], craf = 0;
   function burst(n) {
+    SFX.pop();
     if (reduced()) return;
     cf.width = innerWidth; cf.height = innerHeight;
     const cols = ["#E8202A", "#FFD400", "#0091D5", "#FF2E88", "#00A651", "#FF7A00", "#7B3FE4"];
