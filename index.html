@@ -343,7 +343,11 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
       <div class="bottom" id="t-stub"></div>
     </div>
     <p><strong>Zeig mir diesen Bildschirm</strong> oder schick mir einen Screenshot. Dann suchen wir zusammen einen Termin aus und ich buche.</p>
-    <div class="row"><button class="ghost" id="restart">Duell nochmal</button></div>
+    <div class="row"><button class="ghost" id="restart">Duell nochmal</button><button class="ghost" id="fullrestart">Alles von vorn</button></div>
+    <div class="final" id="fullconfirm" hidden>
+      <p><strong>Wirklich alles zurücksetzen?</strong> Kerzen, Quiz, Tresor, Päckchen und Duell starten dann neu.</p>
+      <div class="row"><button id="fullyes">Ja, von vorn</button><button class="ghost" id="fullno">Abbrechen</button></div>
+    </div>
   </section>
 </div>
 
@@ -1308,6 +1312,16 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     $("t-stub").innerHTML = [["Ort", w.where], ["Wann", w.when], ["Dauer", w.dur], ["Nimmst du mit nach Hause", w.take]]
       .map(([a, b]) => `<div class="stub">${esc(a.toUpperCase())}<b>${esc(b)}</b></div>`).join("");
   }
+  $("fullrestart").addEventListener("click", () => { $("fullconfirm").hidden = false; $("fullconfirm").scrollIntoView({ block: "nearest" }); });
+  $("fullno").addEventListener("click", () => { $("fullconfirm").hidden = true; });
+  $("fullyes").addEventListener("click", () => {
+    $("fullconfirm").hidden = true;
+    stopGame(); stopSong(true); SFX.music(false);
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    S = { cake: false, started: false, q: 0, safe: false, opened: {}, choice: null };
+    qv = null; entry = "";
+    renderCake(); show("v-intro");
+  });
   $("restart").addEventListener("click", () => { S.choice = null; save(); startDuel(); });
 
   // ---------- confetti ----------
