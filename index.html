@@ -97,7 +97,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .cakebox { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px 12px; border: 3px solid var(--ink); border-radius: 8px; background-color: var(--yellow); box-shadow: 6px 6px 0 var(--ink); }
 #cake { width: min(340px, 100%); height: auto; display: block; }
 .cakehint { font-weight: 600; text-align: center; }
-.candle-hit { cursor: pointer; }
+.candle-hit { cursor: pointer; outline: none; }
 .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flicker .35s ease-in-out infinite alternate; }
 @keyframes flicker { from { transform: scale(1, 1) rotate(-3deg); } to { transform: scale(.9, 1.1) rotate(3deg); } }
 .smoke { animation: smoke 1.2s ease-out forwards; transform-box: fill-box; }
@@ -542,7 +542,10 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
       $("mic").hidden = true;
     }
   });
-  $("start").addEventListener("click", () => { S.started = true; save(); renderQuiz(); show("v-quiz"); });
+  $("start").addEventListener("click", () => {
+    S.started = true; save();
+    if (S.q >= QUIZ.length) { renderSafe(); show("v-safe"); } else { renderQuiz(); show("v-quiz"); }
+  });
 
   // ---------- quiz ----------
   function renderNotes(el) {
@@ -1144,7 +1147,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   function jump(h) {
     const all = () => ORDER.forEach(k => { S.opened[k] = true; });
     switch (h) {
-      case "#intro": case "#torte": stopGame(); S.cake = false; S.started = false; save(); renderCake(); show("v-intro"); return true;
+      case "#intro": case "#torte": stopGame(); qv = null; S = { cake: false, started: false, q: 0, safe: false, opened: {}, choice: null }; save(); renderCake(); show("v-intro"); return true;
       case "#quiz": stopGame(); qv = null; S.started = true; S.q = 0; S.safe = false; save(); renderQuiz(); show("v-quiz"); return true;
       case "#tresor": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = false; save(); entry = ""; renderSafe(); show("v-safe"); return true;
       case "#paeckchen": case "#umschlaege": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = true; S.opened = {}; S.choice = null; save(); renderParcels(); show("v-parcels"); return true;
