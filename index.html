@@ -122,7 +122,12 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 #qprev { grid-column: 1; grid-row: 1; }
 .navbtn { font-size: .9rem; padding: 9px 14px; background: #fff; color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
 #qprev { justify-self: start; }
-.navbtn.gotosafe { background: var(--red); color: #fff; }
+.finish { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; padding: 16px; border: 3px solid var(--ink); border-radius: 8px; background-color: var(--yellow); box-shadow: 5px 5px 0 var(--ink); }
+.finish .finish-safe { width: 72px; height: 72px; }
+.finish #tosafe { grid-column: 1 / -1; justify-self: stretch; font-size: 1.1rem; padding: 16px 20px; }
+@keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+.finish .finish-safe { animation: wiggle 1.2s ease-in-out infinite; transform-origin: 50% 90%; }
+@media (prefers-reduced-motion: reduce) { .finish .finish-safe { animation: none; } }
 #qnext { justify-self: end; grid-column: 3; }
 @media (max-width: 420px) { .qnav { grid-template-columns: 1fr 1fr; } .qnav .eyebrow { grid-column: 1 / -1; grid-row: 1; } #qprev { grid-row: 2; grid-column: 1; } #qnext { grid-row: 2; grid-column: 2; } }
 .formulas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -571,10 +576,21 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     box.innerHTML = `<div class="qnav">
         <button class="navbtn" id="qprev"${qv === 0 ? " hidden" : ""} aria-label="Vorherige Frage">← Zurück</button>
         <p class="eyebrow">Frage ${qv + 1} von ${QUIZ.length}${answered ? " · beantwortet" : ""}</p>
-        <button class="navbtn${lastAnswered ? " gotosafe" : ""}" id="qnext"${answered ? "" : " hidden"} aria-label="Nächste Frage">${lastAnswered ? "Tresor →" : "Weiter →"}</button>
+        <button class="navbtn" id="qnext"${answered && !lastAnswered ? "" : " hidden"} aria-label="Nächste Frage">Weiter →</button>
       </div>
       <h3>${esc(item.q)}</h3>
-      <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>`;
+      <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>
+      ${lastAnswered ? `<div class="finish pop">
+        <svg class="finish-safe" viewBox="0 0 80 80" aria-hidden="true"><rect x="6" y="8" width="68" height="62" rx="6" fill="#111"/><rect x="12" y="14" width="56" height="50" rx="4" fill="#3a3a3a" stroke="#FFD400" stroke-width="2"/><circle cx="40" cy="39" r="14" fill="#FFD400" stroke="#111" stroke-width="3"/><path d="M40 27 V33 M40 45 V51 M28 39 H34 M46 39 H52" stroke="#111" stroke-width="3"/><circle cx="40" cy="39" r="4" fill="#111"/><rect x="14" y="70" width="10" height="6" fill="#111"/><rect x="56" y="70" width="10" height="6" fill="#111"/></svg>
+        <div class="stack" style="gap:6px;min-width:0">
+          <p class="eyebrow">Alle ${QUIZ.length} Notizen gesammelt!</p>
+          <h3>Jetzt wartet der Tresor.</h3>
+          <p>Mit deinen Notizen rechnest du dir den Code aus.</p>
+        </div>
+        <button id="tosafe">Zum Tresor →</button>
+      </div>` : ""}`;
+    const ts = box.querySelector("#tosafe");
+    if (ts) ts.addEventListener("click", () => { qv = QUIZ.length; renderQuiz(); });
     box.querySelector("#qprev").addEventListener("click", () => { qv = idx - 1; renderQuiz(); quizSay(); });
     box.querySelector("#qnext").addEventListener("click", () => { qv = idx + 1; renderQuiz(); quizSay(); });
     // answered notes are clickable shortcuts to their question
