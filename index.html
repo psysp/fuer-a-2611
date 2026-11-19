@@ -90,6 +90,15 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .notes span { width: 46px; height: 58px; border: 2px dashed var(--line); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 1.25rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .notes span small { font-size: .65rem; color: var(--muted); }
 .notes span.got { border: 2px solid var(--ink); background: var(--yellow); }
+#notes span.got { cursor: pointer; }
+#notes span.cur { box-shadow: 0 0 0 3px var(--pink); }
+.qnav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.qnav .eyebrow { text-align: center; grid-column: 2; grid-row: 1; }
+#qprev { grid-column: 1; grid-row: 1; }
+.navbtn { font-size: .9rem; padding: 9px 14px; background: var(--paper); color: var(--ink); border-color: var(--ink); }
+#qprev { justify-self: start; }
+#qnext { justify-self: end; grid-column: 3; }
+@media (max-width: 420px) { .qnav { grid-template-columns: 1fr 1fr; } .qnav .eyebrow { grid-column: 1 / -1; grid-row: 1; } #qprev { grid-row: 2; grid-column: 1; } #qnext { grid-row: 2; grid-column: 2; } }
 .formulas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .formulas li { display: flex; gap: 12px; align-items: baseline; background: var(--sheet); border: 2px solid var(--ink); border-radius: 10px; padding: 10px 14px; font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .formulas li b { font-family: var(--body); font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); min-width: 4.5em; }
@@ -193,7 +202,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   <section id="v-quiz" class="stack" hidden>
     <div class="panel" id="quiz"></div>
     <div class="stack" style="gap:8px">
-      <p class="eyebrow">Deine Notizen für den Tresor</p>
+      <p class="eyebrow">Deine Notizen für den Tresor · tippen zum Ansehen</p>
       <div class="notes" id="notes"></div>
     </div>
   </section>
@@ -352,12 +361,23 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     if (qv >= QUIZ.length) { qv = null; renderSafe(); show("v-safe"); return; }
     const item = QUIZ[qv], answered = qv < S.q, idx = qv;
     const lastAnswered = S.q === QUIZ.length && qv === QUIZ.length - 1;
-    box.innerHTML = `<p class="eyebrow">Frage ${qv + 1} von ${QUIZ.length}${answered ? " · beantwortet" : ""}</p><h3>${esc(item.q)}</h3>
-      <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>
-      <div class="row"><button class="ghost" id="qprev"${qv === 0 ? " disabled" : ""}>← Zurück</button>
-      <button class="ghost" id="qnext"${answered ? "" : " disabled"}>${lastAnswered ? "Zum Tresor →" : "Weiter →"}</button></div>`;
+    box.innerHTML = `<div class="qnav">
+        <button class="navbtn" id="qprev"${qv === 0 ? " hidden" : ""} aria-label="Vorherige Frage">← Zurück</button>
+        <p class="eyebrow">Frage ${qv + 1} von ${QUIZ.length}${answered ? " · beantwortet" : ""}</p>
+        <button class="navbtn" id="qnext"${answered ? "" : " hidden"} aria-label="Nächste Frage">${lastAnswered ? "Tresor →" : "Weiter →"}</button>
+      </div>
+      <h3>${esc(item.q)}</h3>
+      <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>`;
     box.querySelector("#qprev").addEventListener("click", () => { qv = idx - 1; renderQuiz(); });
     box.querySelector("#qnext").addEventListener("click", () => { qv = idx + 1; renderQuiz(); });
+    // answered notes are clickable shortcuts to their question
+    $("notes").querySelectorAll("span.got").forEach((s, i) => {
+      s.setAttribute("role", "button"); s.tabIndex = 0; s.title = `Frage ${i + 1} ansehen`;
+      if (i === qv) s.classList.add("cur");
+      const go = () => { qv = i; renderQuiz(); };
+      s.addEventListener("click", go);
+      s.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
     const ab = box.querySelector(".answers"), fb = box.querySelector(".feedback");
     let locked = answered;
     item.a.forEach((txt, i) => {
