@@ -424,8 +424,16 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     st.hidden = !(id in STEP);
     [...st.children].forEach((s, i) => { s.className = i === STEP[id] ? "on" : i < STEP[id] ? "past" : ""; });
     if (id === "v-intro") say(S.cake ? "Bereit? Dann ab ins Quiz!" : "Psst, Anke! Erst die Kerzen auspusten!");
+    else if (id === "v-quiz") quizSay();
     else if (LINES[id]) say(LINES[id]);
     window.scrollTo(0, 0);
+  }
+
+  // otter line for the question on screen: an answered one repeats what the otter said back then
+  function quizSay() {
+    if (qv === null || qv >= QUIZ.length) return;
+    if (qv < S.q) say((S.yay && S.yay[qv]) || (qv === QUIZ.length - 1 ? "Hey, das bin ja ich! Aber bitte nicht singen …" : "Die hast du schon geknackt!"));
+    else say(qv === 0 ? LINES["v-quiz"] : "Weiter geht's!");
   }
 
   // ---------- otter ----------
@@ -567,13 +575,13 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
       </div>
       <h3>${esc(item.q)}</h3>
       <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>`;
-    box.querySelector("#qprev").addEventListener("click", () => { qv = idx - 1; renderQuiz(); });
-    box.querySelector("#qnext").addEventListener("click", () => { qv = idx + 1; renderQuiz(); });
+    box.querySelector("#qprev").addEventListener("click", () => { qv = idx - 1; renderQuiz(); quizSay(); });
+    box.querySelector("#qnext").addEventListener("click", () => { qv = idx + 1; renderQuiz(); quizSay(); });
     // answered notes are clickable shortcuts to their question
     $("notes").querySelectorAll("span.got").forEach((s, i) => {
       s.setAttribute("role", "button"); s.tabIndex = 0; s.title = `Frage ${i + 1} ansehen`;
       if (i === qv) s.classList.add("cur");
-      const go = () => { qv = i; renderQuiz(); };
+      const go = () => { qv = i; renderQuiz(); quizSay(); };
       s.addEventListener("click", go);
       s.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
     });
@@ -589,7 +597,9 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           locked = true; b.classList.add("right");
           S.q++; save(); renderNotes($("notes"));
           fb.textContent = `Richtig! Notiz ${LETTERS[S.q - 1]} = ${item.digit}`;
-          say(idx === QUIZ.length - 1 ? "Hey, das bin ja ich! Aber bitte nicht singen …" : pick(["Stark!", "Zack, richtig!", "Wusste ich's doch!", "Genau so war's!", "Du kennst uns echt gut!"]));
+          const line = idx === QUIZ.length - 1 ? "Hey, das bin ja ich! Aber bitte nicht singen …" : pick(["Stark!", "Zack, richtig!", "Wusste ich's doch!", "Genau so war's!", "Du kennst uns echt gut!"]);
+          S.yay = S.yay || {}; S.yay[idx] = line; save();
+          say(line);
           burst(25);
           // last question: stay so the otter's line can be read; she moves on with "Tresor →"
           if (idx === QUIZ.length - 1) setTimeout(() => { if (qv === idx) renderQuiz(); }, 700);
