@@ -204,6 +204,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     <h2>Deine Lieblingskategorie</h2>
     <p>Bei Flizz hasse ich sie, du liebst sie. Also rechnest du dir den Code selbst aus. Jede Zeile ergibt eine Ziffer. Setz deine Notizen ein, ohne Taschenrechner!</p>
     <div class="notes" id="notes2"></div>
+    <div class="row"><button class="ghost" id="review">← Fragen nochmal ansehen</button></div>
     <ol class="formulas" id="formulas"></ol>
     <div class="safe" id="safe">
       <div class="display" id="display"></div>
@@ -343,18 +344,26 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   function renderNotes(el) {
     el.innerHTML = QUIZ.map((x, i) => `<span class="${i < S.q ? "got" : ""}"><small>${LETTERS[i]}</small>${i < S.q ? x.digit : "?"}</span>`).join("");
   }
+  let qv = null; // question currently shown (can be an already answered one)
   function renderQuiz() {
     renderNotes($("notes"));
     const box = $("quiz");
-    if (S.q >= QUIZ.length) { renderSafe(); show("v-safe"); return; }
-    const item = QUIZ[S.q];
-    box.innerHTML = `<p class="eyebrow">Frage ${S.q + 1} von ${QUIZ.length}</p><h3>${esc(item.q)}</h3>
-      <div class="answers"></div><p class="feedback" aria-live="polite"></p>`;
+    if (qv === null || qv > S.q) qv = S.q;
+    if (qv >= QUIZ.length) { qv = null; renderSafe(); show("v-safe"); return; }
+    const item = QUIZ[qv], answered = qv < S.q, idx = qv;
+    const lastAnswered = S.q === QUIZ.length && qv === QUIZ.length - 1;
+    box.innerHTML = `<p class="eyebrow">Frage ${qv + 1} von ${QUIZ.length}${answered ? " · beantwortet" : ""}</p><h3>${esc(item.q)}</h3>
+      <div class="answers"></div><p class="feedback" aria-live="polite">${answered ? `Richtig beantwortet. Notiz ${LETTERS[qv]} = ${item.digit}` : ""}</p>
+      <div class="row"><button class="ghost" id="qprev"${qv === 0 ? " disabled" : ""}>← Zurück</button>
+      <button class="ghost" id="qnext"${answered ? "" : " disabled"}>${lastAnswered ? "Zum Tresor →" : "Weiter →"}</button></div>`;
+    box.querySelector("#qprev").addEventListener("click", () => { qv = idx - 1; renderQuiz(); });
+    box.querySelector("#qnext").addEventListener("click", () => { qv = idx + 1; renderQuiz(); });
     const ab = box.querySelector(".answers"), fb = box.querySelector(".feedback");
-    let locked = false;
+    let locked = answered;
     item.a.forEach((txt, i) => {
       const b = document.createElement("button");
       b.textContent = txt;
+      if (answered && i === item.ok) b.classList.add("right");
       b.addEventListener("click", () => {
         if (locked || b.classList.contains("wrong")) return;
         if (i === item.ok) {
@@ -362,7 +371,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           S.q++; save(); renderNotes($("notes"));
           fb.textContent = `Richtig! Notiz ${LETTERS[S.q - 1]} = ${item.digit}`;
           burst(25);
-          setTimeout(renderQuiz, 1100);
+          setTimeout(() => { if (qv === idx) { qv = S.q; renderQuiz(); } }, 1100);
         } else {
           b.classList.add("wrong");
           fb.textContent = item.no || "Knapp daneben. Versuch's nochmal.";
@@ -374,6 +383,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
   // ---------- safe ----------
   let entry = "";
+  $("review").addEventListener("click", () => { qv = 0; renderQuiz(); show("v-quiz"); });
   function renderSafe() {
     renderNotes($("notes2"));
     if (!$("formulas").childElementCount) $("formulas").innerHTML = FORMULAS.map((f, i) => `<li><b>${i + 1}. Ziffer</b>${f}</li>`).join("");
@@ -915,7 +925,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     const all = () => ORDER.forEach(k => { S.opened[k] = true; });
     switch (h) {
       case "#intro": show("v-intro"); return true;
-      case "#quiz": stopGame(); S.started = true; S.q = 0; S.safe = false; save(); renderQuiz(); show("v-quiz"); return true;
+      case "#quiz": stopGame(); qv = null; S.started = true; S.q = 0; S.safe = false; save(); renderQuiz(); show("v-quiz"); return true;
       case "#tresor": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = false; save(); entry = ""; renderSafe(); show("v-safe"); return true;
       case "#paeckchen": case "#umschlaege": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = true; S.opened = {}; S.choice = null; save(); renderParcels(); show("v-parcels"); return true;
       case "#duell": case "#wahl": stopGame(); S.started = true; S.q = QUIZ.length; S.safe = true; all(); S.choice = null; save(); startDuel(); return true;
