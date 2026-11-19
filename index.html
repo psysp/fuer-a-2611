@@ -1305,7 +1305,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     $("t-icon").innerHTML = ICON[S.choice];
     $("t-title").textContent = w.name;
     $("t-points").innerHTML = w.points.map(p => `<li>${esc(p)}</li>`).join("");
-    $("t-stub").innerHTML = [["Ort", w.where], ["Zeit", w.when], ["Mitnehmen", w.take]]
+    $("t-stub").innerHTML = [["Ort", w.where], ["Zeit", w.when], ["Nimmst du mit nach Hause", w.take]]
       .map(([a, b]) => `<div class="stub">${esc(a.toUpperCase())}<b>${esc(b)}</b></div>`).join("");
   }
   $("restart").addEventListener("click", () => { S.choice = null; save(); startDuel(); });
