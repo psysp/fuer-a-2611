@@ -124,6 +124,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 #qprev { justify-self: start; }
 .finish { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; padding: 16px; border: 3px solid var(--ink); border-radius: 8px; background-color: var(--yellow); box-shadow: 5px 5px 0 var(--ink); }
 .finish .finish-safe { width: 72px; height: 72px; }
+.finish #songbtn { grid-column: 1 / -1; justify-self: start; }
 .finish #tosafe { grid-column: 1 / -1; justify-self: stretch; font-size: 1.1rem; padding: 16px 20px; }
 @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
 .finish .finish-safe { animation: wiggle 1.2s ease-in-out infinite; transform-origin: 50% 90%; }
@@ -432,6 +433,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     const st = $("steps");
     st.hidden = !(id in STEP);
     [...st.children].forEach((s, i) => { s.className = i === STEP[id] ? "on" : i < STEP[id] ? "past" : ""; });
+    if (id !== "v-quiz") stopSong(true);
     if (id === "v-intro") say(S.cake ? "Bereit? Dann ab ins Quiz!" : "Psst, Anke! Erst die Kerzen auspusten!");
     else if (id === "v-quiz") quizSay();
     else if (LINES[id]) say(LINES[id]);
@@ -548,10 +550,47 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     b.setAttribute("aria-label", SFX.muted ? "Ton einschalten" : "Ton ausschalten");
     b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="#111"/>${SFX.muted ? '<path d="M16 9l5 6M21 9l-5 6" stroke="#E8202A" stroke-width="2.5" stroke-linecap="round"/>' : '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>'}</svg>`;
   }
-  $("sound").addEventListener("click", (e) => { e.stopPropagation(); SFX.setMuted(!SFX.muted); paintSound(); if (!SFX.muted && S.cake) SFX.music(true); });
+  $("sound").addEventListener("click", (e) => { e.stopPropagation(); SFX.setMuted(!SFX.muted); paintSound(); if (song) song.muted = SFX.muted; else if (!SFX.muted && S.cake) SFX.music(true); });
   paintSound();
-  document.addEventListener("pointerdown", () => { SFX.unlock(); if (S.cake && !SFX.muted) SFX.music(true); }, { capture: true });
+  document.addEventListener("pointerdown", () => { SFX.unlock(); if (S.cake && !SFX.muted && !song) SFX.music(true); }, { capture: true });
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("button"); if (b && b.id !== "sound" && !b.closest(".answers") && !b.closest(".keypad")) SFX.click(); }, { capture: true });
+
+  // ---------- otter song (Florian's recording) with lyrics in the speech bubble ----------
+  const SONG = {
+    src: "otter_lied.m4a",
+    cues: [
+      [1.2, "Der kleine Otter hat heute Geburtstag,"],
+      [5.0, "das ist schön, das ist toll."],
+      [9.0, "Der kleine Otter bekommt ein Geschenk,"],
+      [13.0, "was es ist, das weiß ich nicht."],
+      [16.0, "Doch, ich weiß es. Aber ich sag's nicht."],
+      [20.3, "Der kleine Otter hat heute Geburtstag,"],
+      [24.3, "Happy Birthday, kleiner Otter –"],
+      [27.6, "das war das Lied."],
+      [30.5, "Tschüss."]
+    ],
+    end: "Na? Hat dir mein Lied gefallen?"
+  };
+  let song = null, songCue = -1;
+  function paintSongBtn() { const b = document.getElementById("songbtn"); if (b) b.textContent = song ? "■ Lied stoppen" : "♪ Otter-Lied nochmal hören"; }
+  function playSong() {
+    stopSong(true);
+    SFX.music(false);
+    song = new Audio(SONG.src); song.muted = SFX.muted; songCue = -1;
+    const me = song;
+    me.addEventListener("timeupdate", () => {
+      if (song !== me) return;
+      let k = -1; SONG.cues.forEach(([t], i) => { if (me.currentTime >= t) k = i; });
+      if (k !== songCue) { songCue = k; if (k >= 0) say("♪ " + SONG.cues[k][1] + " ♪"); }
+    });
+    me.addEventListener("ended", () => { if (song !== me) return; song = null; say(SONG.end); paintSongBtn(); if (!SFX.muted && S.cake) SFX.music(true); });
+    me.play().catch(() => { if (song === me) { song = null; paintSongBtn(); } });
+    paintSongBtn();
+  }
+  function stopSong(silent) {
+    if (song) { song.pause(); song = null; if (!silent) { say(SONG.end); if (!SFX.muted && S.cake) SFX.music(true); } }
+    paintSongBtn();
+  }
 
   // ---------- otter ----------
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -700,10 +739,13 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           <h3>Jetzt wartet der Tresor.</h3>
           <p>Mit deinen Notizen rechnest du dir den Code aus.</p>
         </div>
+        <button class="ghost" id="songbtn">♪ Otter-Lied nochmal hören</button>
         <button id="tosafe">Zum Tresor →</button>
       </div>` : ""}`;
     const ts = box.querySelector("#tosafe");
     if (ts) ts.addEventListener("click", () => { qv = QUIZ.length; renderQuiz(); });
+    const sb = box.querySelector("#songbtn");
+    if (sb) { paintSongBtn(); sb.addEventListener("click", () => { song ? stopSong() : playSong(); }); }
     box.querySelector("#qprev").addEventListener("click", () => { qv = idx - 1; renderQuiz(); quizSay(); });
     box.querySelector("#qnext").addEventListener("click", () => { qv = idx + 1; renderQuiz(); quizSay(); });
     // answered notes are clickable shortcuts to their question
@@ -729,6 +771,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           const line = idx === QUIZ.length - 1 ? "Hey, das bin ja ich! Aber bitte nicht singen …" : pick(["Stark!", "Zack, richtig!", "Wusste ich's doch!", "Genau so war's!", "Du kennst uns echt gut!"]);
           S.yay = S.yay || {}; S.yay[idx] = line; save();
           say(line); SFX.correct();
+          if (idx === QUIZ.length - 1 && !SFX.muted) playSong();
           burst(25);
           // last question: stay so the otter's line can be read; she moves on with "Tresor →"
           if (idx === QUIZ.length - 1) setTimeout(() => { if (qv === idx) renderQuiz(); }, 700);
