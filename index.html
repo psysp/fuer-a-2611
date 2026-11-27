@@ -222,6 +222,11 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .soundbtn { position: fixed; z-index: 6; top: calc(10px + env(safe-area-inset-top, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); width: 48px; height: 48px; padding: 10px; border-radius: 50%; background: var(--yellow); }
 .soundbtn svg { width: 100%; height: 100%; display: block; }
 .soundbtn[aria-pressed="false"] { background: #fff; }
+.tablebox { width: 100%; border: 3px solid var(--ink); border-radius: 8px; overflow: hidden; touch-action: none; background: #6B3F1D; }
+.tablebox svg { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+.dragitem { cursor: grab; }
+.dragitem.lift { cursor: grabbing; filter: drop-shadow(3px 5px 0 rgba(0,0,0,.35)); }
+.dragitem.placed { cursor: default; }
 /* balloons */
 .balloons { position: fixed; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
 .balloon { position: absolute; bottom: -160px; width: 64px; animation: rise linear forwards; }
@@ -990,76 +995,78 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     cleanup = () => cancelAnimationFrame(raf);
   }
 
-  // ---------- Kochkurs: catch the right ingredients in the pot ----------
+  // ---------- Essen gehen: set the table by dragging items onto their outlines ----------
   function gameKoch(st, n, onWin) {
-    st.innerHTML = head(n, "Gut gefangen", "Fang mit dem Topf die richtigen Sachen auf. Zieh den Topf mit Finger oder Maus hin und her. Aber Vorsicht vor allem, was nicht in den Topf gehört!") + `
-      <div class="stagebox"><canvas id="kc" aria-label="Küche mit Topf"></canvas></div>
-      <p class="meter" id="kmsg" aria-live="polite">Im Topf: 0 von 10</p>`;
-    const box = st.querySelector(".stagebox"), cv = st.querySelector("#kc"), msg = st.querySelector("#kmsg");
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = box.clientWidth, h = box.clientHeight;
-    cv.width = w * dpr; cv.height = h * dpr;
-    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const GOOD = ["🍅", "🥕", "🧅", "🧄", "🌶️", "🍄", "🥔", "🧀"], BAD = ["👟", "🧦", "🔋", "🧸"];
-    const GOAL = 10, size = Math.max(26, w * .075), potW = Math.max(90, w * .24), potY = h - h * .2;
-    let potX = w / 2, target = w / 2, items = [], spawn = .4, count = 0, finished = false, shake = 0, raf = 0, last = performance.now(), steam = 0;
-    const setX = (e) => { const r = cv.getBoundingClientRect(); target = Math.max(potW / 2, Math.min(w - potW / 2, e.clientX - r.left)); };
-    cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); setX(e); });
-    cv.addEventListener("pointermove", setX);
-    const keys = (e) => { if (e.key === "ArrowLeft") { target = Math.max(potW / 2, target - w * .08); e.preventDefault(); } if (e.key === "ArrowRight") { target = Math.min(w - potW / 2, target + w * .08); e.preventDefault(); } };
-    document.addEventListener("keydown", keys);
-    function kitchen() {
-      const t = 26;
-      for (let y = 0; y < h; y += t) for (let x = 0; x < w; x += t) { g.fillStyle = ((x + y) / t) % 2 ? "#FFFFFF" : "#CDEBF7"; g.fillRect(x, y, t, t); }
-      g.fillStyle = "#8B5A2B"; g.fillRect(0, h - h * .1, w, h * .1);
-      g.fillStyle = "#111"; g.fillRect(0, h - h * .1, w, 3);
-    }
-    function pot() {
-      const x = potX + (shake > 0 ? Math.sin(shake * 60) * 6 : 0);
-      g.save(); g.translate(x, potY);
-      g.strokeStyle = "#111"; g.lineWidth = 3;
-      g.fillStyle = "#111"; g.fillRect(-potW / 2 - 14, potW * .08, 16, 8); g.fillRect(potW / 2 - 2, potW * .08, 16, 8);
-      g.fillStyle = "#E8202A"; g.beginPath(); g.moveTo(-potW / 2, 0); g.lineTo(potW / 2, 0); g.lineTo(potW * .44, potW * .38); g.quadraticCurveTo(0, potW * .46, -potW * .44, potW * .38); g.closePath(); g.fill(); g.stroke();
-      g.fillStyle = "#FFD400"; [-.22, 0, .22].forEach(p => { g.beginPath(); g.arc(potW * p, potW * .2, 4, 0, 7); g.fill(); });
-      g.fillStyle = "#3a1d0e"; g.beginPath(); g.ellipse(0, 0, potW / 2, potW * .08, 0, 0, 7); g.fill(); g.stroke();
-      if (steam > 0) {
-        g.strokeStyle = `rgba(120,120,120,${Math.min(.8, steam)})`; g.lineWidth = 4; g.lineCap = "round";
-        [-.2, 0, .2].forEach((p, i) => { g.beginPath(); for (let k = 0; k <= 10; k++) { const yy = -10 - k * 6, xx = potW * p + Math.sin(k * .8 + steam * 8 + i) * 6; k ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } g.stroke(); });
-      }
-      g.restore();
-    }
-    function frame(now) {
-      const dt = Math.min(.05, (now - last) / 1000); last = now;
-      potX += (target - potX) * Math.min(1, dt * 14);
-      if (shake > 0) shake = Math.max(0, shake - dt);
-      if (!finished) {
-        spawn -= dt;
-        if (spawn <= 0) {
-          spawn = .55 + Math.random() * .45;
-          const bad = Math.random() < .28;
-          items.push({ e: bad ? BAD[Math.floor(Math.random() * BAD.length)] : GOOD[Math.floor(Math.random() * GOOD.length)], bad, x: size + Math.random() * (w - size * 2), y: -size, vy: h * (.32 + Math.random() * .22) * (1 + count * .03), rot: (Math.random() - .5) * 2 });
-        }
-      } else steam += dt;
-      items.forEach(it => { it.y += it.vy * dt; });
-      items = items.filter(it => {
-        if (!finished && it.y >= potY - 4 && it.y <= potY + potW * .2 && Math.abs(it.x - potX) < potW / 2) {
-          if (it.bad) { count = Math.max(0, count - 2); shake = .35; SFX.wrong(); msg.textContent = `Iiih, ${it.e} gehört nicht in den Topf! Im Topf: ${count} von ${GOAL}`; }
-          else {
-            count++; SFX.key(); msg.textContent = `Im Topf: ${count} von ${GOAL}`;
-            if (count >= GOAL) { finished = true; items = []; SFX.ding(); msg.textContent = "Lecker! Der Tisch ist gedeckt."; setTimeout(onWin, 600); }
-          }
-          return false;
-        }
-        return it.y < h + size;
+    st.innerHTML = head(n, "Tisch decken", "Zieh Teller, Gabel, Messer, Glas und Kerze an die richtigen Stellen auf dem Tisch.") + `
+      <div class="tablebox"><svg id="tbl" viewBox="0 0 360 220" role="img" aria-label="Tisch mit Umrissen für Teller, Besteck, Glas und Kerze"></svg></div>
+      <p class="meter" id="tmsg2" aria-live="polite">Gedeckt: 0 von 5</p>`;
+    const svg = st.querySelector("#tbl"), msg = st.querySelector("#tmsg2");
+    const NS = "http://www.w3.org/2000/svg";
+    const ART = {
+      plate: `<circle r="30" fill="#fff" stroke="#111" stroke-width="3"/><circle r="20" fill="none" stroke="#cfcfcf" stroke-width="2"/>`,
+      fork: `<path d="M-7 -28 V-12 Q-7 -4 -2 -4 V26 Q0 29 2 26 V-4 Q7 -4 7 -12 V-28 M-2.3 -28 V-12 M2.3 -28 V-12" fill="#d9d9d9" stroke="#111" stroke-width="2.2" stroke-linejoin="round"/>`,
+      knife: `<path d="M-3.5 -28 Q7 -22 4 -2 H-3.5 Z" fill="#e6e6e6" stroke="#111" stroke-width="2.2" stroke-linejoin="round"/><rect x="-4" y="-3" width="8" height="30" rx="3" fill="#6B3F1D" stroke="#111" stroke-width="2.2"/>`,
+      glass: `<path d="M-11 -18 Q-12 2 0 4 Q12 2 11 -18 Z" fill="#fff" stroke="#111" stroke-width="2.2"/><path d="M-10 -8 Q0 -5 10 -8 Q10 2 0 3 Q-10 2 -10 -8 Z" fill="#E8202A" opacity=".85"/><path d="M0 4 V17" stroke="#111" stroke-width="2.5"/><ellipse cy="18" rx="9" ry="2.5" fill="#fff" stroke="#111" stroke-width="2"/>`,
+      candle: `<g class="flame" style="display:none"><path d="M0 -36 C6 -28 6 -20 0 -19 C-6 -20 -6 -28 0 -36Z" fill="#FF7A00" stroke="#111" stroke-width="1.5"/><path d="M0 -30 C2.5 -26 2.5 -22 0 -22 C-2.5 -22 -2.5 -26 0 -30Z" fill="#FFD400"/></g><path d="M0 -18 V-21" stroke="#111" stroke-width="1.5"/><rect x="-5" y="-18" width="10" height="26" rx="2" fill="#fff" stroke="#111" stroke-width="2.2"/><ellipse cy="9" rx="10" ry="3.5" fill="#FFD400" stroke="#111" stroke-width="2"/>`
+    };
+    const T = { plate: [180, 120], fork: [133, 120], knife: [227, 120], glass: [234, 58], candle: [180, 58] };
+    const OUT = {
+      plate: `<circle r="30"/>`, fork: `<rect x="-8" y="-29" width="16" height="58" rx="6"/>`, knife: `<rect x="-8" y="-29" width="16" height="58" rx="6"/>`,
+      glass: `<rect x="-13" y="-20" width="26" height="42" rx="8"/>`, candle: `<rect x="-11" y="-20" width="22" height="32" rx="6"/>`
+    };
+    const slots = [[42, 55], [42, 160], [318, 50], [318, 120], [318, 185]].sort(() => Math.random() - .5);
+    let checks = ""; for (let x = 84; x < 276; x += 16) checks += `<rect x="${x}" y="14" width="8" height="8" fill="#E8202A"/><rect x="${x + 8}" y="198" width="8" height="8" fill="#E8202A"/>`;
+    svg.innerHTML = `<rect width="360" height="220" fill="#6B3F1D"/>
+      <g stroke="rgba(0,0,0,.25)" stroke-width="2">${[44, 88, 132, 176].map(y => `<line x1="0" x2="360" y1="${y}" y2="${y}"/>`).join("")}</g>
+      <rect x="80" y="10" width="200" height="200" rx="10" fill="#FFF8F0" stroke="#111" stroke-width="3"/>${checks}
+      <g id="targets" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="5 4" opacity=".55">
+        ${Object.keys(T).map(k => `<g data-t="${k}" transform="translate(${T[k][0]} ${T[k][1]})">${OUT[k]}</g>`).join("")}
+      </g>`;
+    const items = Object.keys(ART).map((k, i) => {
+      const gEl = document.createElementNS(NS, "g");
+      gEl.setAttribute("class", "dragitem"); gEl.dataset.k = k;
+      gEl.innerHTML = `<circle r="32" fill="transparent"/>${ART[k]}`;
+      svg.appendChild(gEl);
+      const it = { k, g: gEl, x: slots[i][0], y: slots[i][1], done: false };
+      const place = () => gEl.setAttribute("transform", `translate(${it.x} ${it.y})`);
+      place(); it.place = place;
+      return it;
+    });
+    const toSvg = (e) => { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+    let drag = null, count = 0;
+    items.forEach(it => {
+      it.g.addEventListener("pointerdown", (e) => {
+        if (it.done) return;
+        e.preventDefault(); it.g.setPointerCapture(e.pointerId);
+        const p = toSvg(e); drag = { it, dx: it.x - p.x, dy: it.y - p.y };
+        svg.appendChild(it.g); it.g.classList.add("lift");
       });
-      kitchen();
-      g.textAlign = "center"; g.textBaseline = "middle"; g.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-      items.forEach(it => { g.save(); g.translate(it.x, it.y); g.rotate(it.rot * it.y / h); g.fillText(it.e, 0, 0); g.restore(); });
-      pot();
-      raf = requestAnimationFrame(frame);
-    }
-    raf = requestAnimationFrame(frame);
-    cleanup = () => { cancelAnimationFrame(raf); document.removeEventListener("keydown", keys); };
+      it.g.addEventListener("pointermove", (e) => {
+        if (!drag || drag.it !== it) return;
+        const p = toSvg(e); it.x = Math.max(14, Math.min(346, p.x + drag.dx)); it.y = Math.max(14, Math.min(206, p.y + drag.dy)); it.place();
+      });
+      const drop = () => {
+        if (!drag || drag.it !== it) return;
+        drag = null; it.g.classList.remove("lift");
+        const [tx, ty] = T[it.k];
+        if (Math.hypot(it.x - tx, it.y - ty) < 24) {
+          it.x = tx; it.y = ty; it.place(); it.done = true; it.g.classList.add("placed"); count++;
+          const tg = svg.querySelector(`[data-t="${it.k}"]`); tg.setAttribute("stroke", "#00A651"); tg.setAttribute("stroke-dasharray", "none");
+          SFX.ding(); msg.textContent = `Gedeckt: ${count} von 5`;
+          if (count === 5) {
+            svg.querySelector(".dragitem[data-k='candle'] .flame").style.display = "";
+            svg.querySelector("#targets").setAttribute("opacity", "0");
+            msg.textContent = "Der Tisch ist gedeckt. Kerze an, Abend kann kommen!";
+            setTimeout(onWin, 800);
+          }
+        } else {
+          const near = Object.keys(T).find(k => Math.hypot(it.x - T[k][0], it.y - T[k][1]) < 24);
+          if (near) { SFX.wrong(); msg.textContent = "Das gehört woanders hin!"; }
+        }
+      };
+      it.g.addEventListener("pointerup", drop); it.g.addEventListener("pointercancel", drop);
+    });
+    cleanup = () => {};
   }
 
   function gameGraffiti(st, n, onWin) {
