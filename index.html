@@ -153,7 +153,10 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .safe .msg { font-family: var(--comic); font-size: 1.15rem; letter-spacing: .04em; color: var(--yellow); min-height: 1.4em; text-align: center; }
 
 /* parcels */
-.parcels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.parcels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .parcels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stagebox { position: relative; width: 100%; aspect-ratio: 3 / 2; max-height: 340px; border: 3px solid var(--ink); border-radius: 8px; overflow: hidden; touch-action: none; background: #2a1430; }
+.stagebox canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
 @media (max-width: 560px) { .parcels { grid-template-columns: 1fr; } }
 .parcel { background: #fff; color: var(--ink); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font: inherit; min-width: 0; box-shadow: 5px 5px 0 var(--ink); }
 .parcel:hover { background: var(--yellow); }
@@ -307,8 +310,8 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   <!-- PARCELS -->
   <section id="v-parcels" class="stack" hidden>
     <p class="eyebrow">Der Tresor ist offen</p>
-    <h2>Drei Päckchen</h2>
-    <p>Im Tresor liegen drei Päckchen. In jedem steckt etwas, das wir zusammen machen können. Auspacken geht nur mit Geschick: Jedes Päckchen hat seine eigene Aufgabe.</p>
+    <h2>Vier Päckchen</h2>
+    <p>Im Tresor liegen vier Päckchen. In jedem steckt etwas, das wir zusammen machen können. Auspacken geht nur mit Geschick: Jedes Päckchen hat seine eigene Aufgabe.</p>
     <div class="parcels" id="parcels"></div>
     <div class="row"><button id="to-duel" disabled>Zum Duell</button><span class="small" id="progress"></span></div>
   </section>
@@ -382,17 +385,18 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
   const ICON = {
     parcel: (c) => `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="34" width="72" height="54" rx="4" fill="${c}" stroke="#1D1F24" stroke-width="3"/><rect x="10" y="24" width="80" height="16" rx="3" fill="${c}" stroke="#1D1F24" stroke-width="3"/><rect x="45" y="24" width="10" height="64" fill="#FF48B0"/><path d="M50 24 C36 6 24 14 34 22 C38 25 46 24 50 24 C54 24 62 25 66 22 C76 14 64 6 50 24Z" fill="#FF48B0" stroke="#1D1F24" stroke-width="2.5"/><text x="50" y="72" text-anchor="middle" font-family="Bricolage Grotesque, Arial Black, sans-serif" font-weight="800" font-size="20" fill="#1D1F24">?</text></svg>`,
-    beton: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M16 42 H84 L76 82 Q75 86 70 86 H30 Q25 86 24 82Z" fill="#8E9093" stroke="#1D1F24" stroke-width="3"/><ellipse cx="50" cy="42" rx="34" ry="8" fill="#a6a8ab" stroke="#1D1F24" stroke-width="3"/><circle cx="38" cy="62" r="3" fill="#FF48B0"/><circle cx="58" cy="70" r="3.5" fill="#FFD23F"/><circle cx="64" cy="56" r="2.5" fill="#0078BF"/><circle cx="46" cy="76" r="2" fill="#FBFBF8"/><path d="M58 30 C58 22 66 18 70 12" stroke="#1D1F24" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M70 12 C64 16 64 22 70 24 C76 22 76 16 70 12Z" fill="#1E8C5A" stroke="#1D1F24" stroke-width="2"/></svg>`,
+    theater: `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-12 38 50)"><path d="M14 22 Q38 12 62 22 Q64 58 38 78 Q12 58 14 22Z" fill="#FFD400" stroke="#111" stroke-width="3"/><path d="M24 38 q5 -5 10 0 M42 38 q5 -5 10 0" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M26 54 Q38 66 50 54" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="rotate(14 64 54)"><path d="M40 28 Q64 18 88 28 Q90 64 64 84 Q38 64 40 28Z" fill="#0091D5" stroke="#111" stroke-width="3"/><path d="M50 44 q5 5 10 0 M68 44 q5 5 10 0" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M52 68 Q64 58 76 68" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/></g></svg>`,
+    koch: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 40 Q18 38 20 26 Q22 14 36 18 Q40 6 52 8 Q64 6 66 18 Q80 14 82 26 Q84 38 70 40 Z" fill="#fff" stroke="#111" stroke-width="3" stroke-linejoin="round"/><rect x="32" y="38" width="36" height="12" fill="#fff" stroke="#111" stroke-width="3"/><path d="M16 60 H84 V80 Q84 90 74 90 H26 Q16 90 16 80 Z" fill="#E8202A" stroke="#111" stroke-width="3"/><rect x="10" y="56" width="80" height="8" rx="3" fill="#111"/><rect x="4" y="66" width="12" height="6" rx="3" fill="#111"/><rect x="84" y="66" width="12" height="6" rx="3" fill="#111"/><circle cx="36" cy="74" r="3" fill="#FFD400"/><circle cx="50" cy="78" r="3" fill="#FFD400"/><circle cx="64" cy="74" r="3" fill="#FFD400"/></svg>`,
     graffiti: `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="32" y="30" width="36" height="60" rx="8" fill="#FF48B0" stroke="#1D1F24" stroke-width="3"/><rect x="38" y="18" width="24" height="14" rx="3" fill="#FBFBF8" stroke="#1D1F24" stroke-width="3"/><rect x="46" y="10" width="8" height="9" fill="#1D1F24"/><rect x="32" y="50" width="36" height="14" fill="#FFD23F" stroke="#1D1F24" stroke-width="3"/><circle cx="22" cy="12" r="3" fill="#0078BF"/><circle cx="16" cy="20" r="2" fill="#0078BF"/><circle cx="26" cy="22" r="2.5" fill="#0078BF"/><circle cx="12" cy="10" r="1.5" fill="#0078BF"/></svg>`,
     sieb: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M32 14 L18 22 L8 40 L22 46 L26 40 V88 H74 V40 L78 46 L92 40 L82 22 L68 14 C64 22 36 22 32 14Z" fill="#FBFBF8" stroke="#1D1F24" stroke-width="3" stroke-linejoin="round"/><path d="M50 72 C34 62 36 46 44 46 C48 46 50 50 50 52 C50 50 52 46 56 46 C64 46 66 62 50 72Z" fill="#0078BF"/><path d="M50 72 C34 62 36 46 44 46 C48 46 50 50 50 52 C50 50 52 46 56 46 C64 46 66 62 50 72Z" fill="#FF48B0" opacity=".85" transform="translate(3 2)" style="mix-blend-mode:multiply"/></svg>`
   };
 
   const W = {
-    beton: {
-      name: "Dekoration aus Beton", short: "Beton", where: "Kreativstudio München", paper: "#FFD23F",
-      points: ["Drei eigene Deko-Stücke aus Kreativbeton gießen", "Einfärben, marmoriert oder im Terrazzo-Look", "Getränke und Snacks inklusive"],
-      take: "3 Betonstücke, Tasche und Pflege-Kit", when: "Das ganze Jahr, Termin suchen wir zusammen aus", dur: "ca. 2 Stunden",
-      game: "beton"
+    theater: {
+      name: "Theaterbesuch", short: "Theater", where: "Ein Theater in München, suchen wir zusammen aus", paper: "#FFD23F",
+      points: ["Ein Stück, das wir zusammen aussuchen", "Schick machen und ab ins Theater", "Handy aus, Vorhang auf, genießen"],
+      take: "Einen schönen Abend zu zweit und viel Gesprächsstoff",
+      game: "theater"
     },
     graffiti: {
       name: "Graffiti für Beginner", short: "Graffiti", where: "KUNSTLABOR 2, Dachauer Str. 90", paper: "#9fd4f2",
@@ -403,11 +407,17 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     sieb: {
       name: "Siebdruck Basic", short: "Siebdruck", where: "dreierrr, Kirchenstraße 97", paper: "#ffb3dc",
       points: ["Ein eigenes Shirt im Siebdruck bedrucken", "Shirt, Farbe, Sieb und Rakel, alles inklusive"],
-      take: "Dein selbst bedrucktes Fairtrade-Shirt", when: "Das ganze Jahr, Termin suchen wir zusammen aus", dur: "ca. 3 Stunden",
+      take: "Dein selbst bedrucktes Fairtrade-Shirt",
       game: "sieb"
+    },
+    koch: {
+      name: "Kochkurs für zwei", short: "Kochkurs", where: "Ein Kochkurs in München, suchen wir zusammen aus", paper: "#b8f0c8",
+      points: ["Zusammen ein ganzes Menü kochen", "Neue Rezepte und Profi-Tricks lernen", "Am Ende essen wir alles selbst auf"],
+      take: "Neue Lieblingsrezepte und einen vollen Bauch",
+      game: "koch"
     }
   };
-  const ORDER = ["beton", "graffiti", "sieb"];
+  const ORDER = ["theater", "graffiti", "sieb", "koch"];
 
   // ---------- state ----------
   const KEY = "werkstatt-geschenk-v3";
@@ -427,7 +437,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   const LINES = {
     "v-quiz": "Mal sehen, wie gut du uns kennst!",
     "v-safe": "Kopfrechnen! Deine Lieblingsdisziplin. Ich halt mich da raus.",
-    "v-parcels": "Drei Päckchen! Ich hab nicht reingeschaut. Ehrlich.",
+    "v-parcels": "Vier Päckchen! Ich hab nicht reingeschaut. Ehrlich.",
     "v-game": "Du schaffst das!",
     "v-duel": "Jetzt wird's ernst. Nur einer kommt auf den Gutschein!",
     "v-ticket": "Gute Wahl! Ich freu mich schon riesig."
@@ -854,7 +864,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
       box.appendChild(b);
     });
     const n = ORDER.filter(k => S.opened[k]).length;
-    $("progress").textContent = n === 3 ? "Alle drei ausgepackt" : `${n} von 3 ausgepackt`;
+    $("progress").textContent = n === ORDER.length ? "Alle vier ausgepackt" : `${n} von ${ORDER.length} ausgepackt`;
     $("to-duel").disabled = n < 3;
   }
   $("to-duel").addEventListener("click", startDuel);
@@ -868,7 +878,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     show("v-game");
     const n = ORDER.indexOf(k) + 1;
     if (S.opened[k]) { st.innerHTML = `<p class="eyebrow">Päckchen ${n}</p>`; reveal(k); return; }
-    ({ beton: gameBeton, graffiti: gameGraffiti, sieb: gameSieb })[k](st, n, () => {
+    ({ theater: gameTheater, graffiti: gameGraffiti, sieb: gameSieb, koch: gameKoch })[k](st, n, () => {
       S.opened[k] = true; save(); burst(80); SFX.fanfare();
       say(pick(["Ausgepackt! Ooooh!", "Wow, schau mal!", "Das sieht gut aus!"]));
       reveal(k);
@@ -896,107 +906,160 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   $("back").addEventListener("click", backToParcels);
   const head = (n, task, intro) => `<p class="eyebrow">Päckchen ${n} auspacken</p><h2>${task}</h2><p>${intro}</p>`;
 
-  function gameBeton(st, n, onWin) {
-    st.innerHTML = head(n, "Fingerspitzengefühl", "Halte den Knopf gedrückt, um die Form zu füllen. Lass genau dann los, wenn der Pegel zwischen den blauen Linien ist. Drei Formen.") + `
-      <div class="molds" id="molds"></div>
-      <button class="pour" id="pour">Gedrückt halten</button>
-      <p class="meter" id="bmsg" aria-live="polite">Form 1 von 3</p>`;
-    const molds = st.querySelector("#molds"), pour = st.querySelector("#pour"), msg = st.querySelector("#bmsg");
-    // silicone molds: cavity spans y 20..130 in a 100x150 viewBox
-    const SHAPES = [
-      "M16 22 H84 V92 A34 38 0 0 1 16 92 Z",
-      "M50 20 L88 42 L88 108 L50 130 L12 108 L12 42 Z",
-      "M50 130 C8 100 6 58 26 42 C38 33 50 42 50 54 C50 42 62 33 74 42 C94 58 92 100 50 130 Z"
-    ];
-    const SIL = ["#ff8cc8", "#7cc6ee", "#ffd23f"];
-    const uid = Date.now().toString(36);
-    const surf = (lvl) => 130 - Math.min(100, lvl) / 100 * 110;
-    const wave = (lvl, t, a) => {
-      const y0 = surf(lvl);
-      let d = `M0 150 L0 ${y0.toFixed(1)}`;
-      for (let x = 0; x <= 100; x += 5) d += ` L${x} ${(y0 + Math.sin(x / 100 * Math.PI * 3 + t * 7) * a).toFixed(1)}`;
-      return d + " L100 150 Z";
-    };
-    const speck = () => { let s = ""; const cols = ["#FF48B0", "#FFD23F", "#0078BF", "#FBFBF8", "#1D1F24"]; for (let k = 0; k < 26; k++) s += `<circle cx="${(10 + Math.random() * 80).toFixed(1)}" cy="${(25 + Math.random() * 105).toFixed(1)}" r="${(1 + Math.random() * 2.6).toFixed(1)}" fill="${cols[k % 5]}"/>`; return s; };
-    const M = SHAPES.map((shape, j) => {
-      const lo = 42 + Math.random() * 30, hi = lo + 13;
-      const yHi = surf(hi), yLo = surf(lo);
-      const el = document.createElement("div");
-      el.className = "mold";
-      el.innerHTML = `<svg viewBox="0 0 100 150" aria-hidden="true">
-        <defs>
-          <clipPath id="cp${uid}${j}"><path d="${shape}"/></clipPath>
-          <linearGradient id="lq${uid}${j}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4d5d7"/><stop offset="1" stop-color="#8E9093"/></linearGradient>
-        </defs>
-        <path d="${shape}" fill="none" stroke="${SIL[j]}" stroke-width="14" stroke-linejoin="round"/>
-        <path d="${shape}" fill="none" stroke="#1D1F24" stroke-width="2" stroke-linejoin="round" transform="translate(50 75) scale(1.14) translate(-50 -75)" opacity=".5"/>
-        <path d="${shape}" fill="#f4f2ec"/>
-        <g clip-path="url(#cp${uid}${j})">
-          <rect x="0" y="${yHi.toFixed(1)}" width="100" height="${(yLo - yHi).toFixed(1)}" fill="rgba(0,120,191,.16)"/>
-          <path class="liq" d="${wave(0, 0, 0)}" fill="url(#lq${uid}${j})"/>
-          <g class="terr" opacity="0">${speck()}</g>
-          <line x1="0" x2="100" y1="${yHi.toFixed(1)}" y2="${yHi.toFixed(1)}" stroke="#0078BF" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <line x1="0" x2="100" y1="${yLo.toFixed(1)}" y2="${yLo.toFixed(1)}" stroke="#0078BF" stroke-width="1.5" stroke-dasharray="4 3"/>
-        </g>
-        <path d="${shape}" fill="none" stroke="#1D1F24" stroke-width="3" stroke-linejoin="round"/>
-        <rect class="stream" x="47" y="0" width="6" height="0" rx="3" fill="#a9abae"/>
-        <text class="okmark" x="50" y="88" text-anchor="middle" font-family="Bricolage Grotesque, Arial Black, sans-serif" font-weight="800" font-size="30" fill="#1E8C5A" opacity="0">✓</text>
-      </svg>`;
-      molds.appendChild(el);
-      return { el, lo, hi, level: 0, liq: el.querySelector(".liq"), stream: el.querySelector(".stream"), terr: el.querySelector(".terr"), okm: el.querySelector(".okmark") };
-    });
-    let i = 0, holding = false, raf = 0, last = 0, finished = false, idle = 0;
-    M[0].el.classList.add("active");
-    const draw = (m, t, a) => {
-      m.liq.setAttribute("d", wave(m.level, t, a));
-      const y = surf(m.level);
-      m.stream.setAttribute("height", holding ? Math.max(0, y).toFixed(1) : "0");
-    };
-    const tick = (t) => {
-      const m = M[i];
-      if (!m) return;
-      if (holding) {
-        const dt = Math.min(0.05, (t - last) / 1000); last = t;
-        m.level += dt * (32 + m.level * 0.6);
-        if (m.level >= 100) { draw(m, t / 1000, 3); release(); return; }
+  // ---------- Theater: guide the spotlight over three actors on a dark stage ----------
+  function gameTheater(st, n, onWin) {
+    st.innerHTML = head(n, "Licht an!", "Auf der dunklen Bühne huschen drei Figuren herum. Führ den Lichtkegel mit Finger oder Maus über sie und halte jede kurz im Licht.") + `
+      <div class="stagebox"><canvas id="th" aria-label="Dunkle Bühne mit Lichtkegel"></canvas></div>
+      <p class="meter" id="tmsg" aria-live="polite">Im Licht: 0 von 3</p>`;
+    const box = st.querySelector(".stagebox"), cv = st.querySelector("#th"), msg = st.querySelector("#tmsg");
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = box.clientWidth, h = box.clientHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dark = document.createElement("canvas"); dark.width = cv.width; dark.height = cv.height;
+    const d = dark.getContext("2d"); d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const R = Math.max(42, w * .15), sp = w * .2;
+    const cols = ["#E8202A", "#0091D5", "#FFD400"];
+    const A = cols.map((c, i) => ({ c, x: w * (.3 + i * .2), y: h * (.6 + (i % 2) * .12), vx: (Math.random() < .5 ? -1 : 1) * sp * (.7 + Math.random() * .5), vy: (Math.random() - .5) * sp * .5, lit: 0, done: false, turn: 1 + Math.random() }));
+    const spot = { x: w / 2, y: h * .45 };
+    let raf = 0, last = performance.now(), count = 0, finished = false, fade = 0;
+    const move = (e) => { const r = cv.getBoundingClientRect(); spot.x = e.clientX - r.left; spot.y = e.clientY - r.top; };
+    cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); move(e); });
+    cv.addEventListener("pointermove", move);
+    function stage() {
+      g.fillStyle = "#2a1430"; g.fillRect(0, 0, w, h);
+      g.fillStyle = "#5a3a22"; g.beginPath(); g.moveTo(w * .08, h * .48); g.lineTo(w * .92, h * .48); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fill();
+      g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 2;
+      for (let k = 1; k < 6; k++) { const y = h * .48 + (h * .52) * (k / 6); g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      const curtain = (x0, dir) => {
+        g.fillStyle = "#C41230";
+        g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 + dir * w * .16, 0);
+        g.quadraticCurveTo(x0 + dir * w * .1, h * .5, x0 + dir * w * .13, h); g.lineTo(x0, h); g.closePath(); g.fill();
+        g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 3;
+        for (let k = 1; k < 4; k++) { g.beginPath(); g.moveTo(x0 + dir * w * .04 * k, 0); g.quadraticCurveTo(x0 + dir * w * .03 * k, h * .5, x0 + dir * w * .035 * k, h); g.stroke(); }
+      };
+      curtain(0, 1); curtain(w, -1);
+      g.fillStyle = "#C41230"; g.fillRect(0, 0, w, h * .1);
+      g.fillStyle = "#FFD400"; for (let x = 8; x < w; x += 22) { g.beginPath(); g.arc(x, h * .1, 4, 0, 7); g.fill(); }
+    }
+    function actor(a, t) {
+      const s = h * .11, bob = a.done ? Math.sin(t * 6) * 3 : Math.sin(t * 9 + a.x) * 2;
+      g.save(); g.translate(a.x, a.y + bob);
+      g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(0, s * 1.05, s * .6, s * .16, 0, 0, 7); g.fill();
+      g.fillStyle = a.c; g.strokeStyle = "#111"; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(-s * .45, s); g.lineTo(-s * .3, -s * .1); g.lineTo(s * .3, -s * .1); g.lineTo(s * .45, s); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#F1C9A0"; g.beginPath(); g.arc(0, -s * .45, s * .32, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = "#111"; g.beginPath(); g.arc(-s * .11, -s * .5, 2.5, 0, 7); g.arc(s * .11, -s * .5, 2.5, 0, 7); g.fill();
+      g.beginPath(); g.lineWidth = 2; g.arc(0, -s * .42, s * .12, .2, Math.PI - .2); g.stroke();
+      if (a.done) { g.strokeStyle = "#111"; g.lineWidth = 3; g.beginPath(); g.moveTo(-s * .3, -s * .05); g.lineTo(-s * .65, -s * .55); g.moveTo(s * .3, -s * .05); g.lineTo(s * .65, -s * .55); g.stroke(); }
+      if (!a.done && a.lit > 0) { g.strokeStyle = "#FFD400"; g.lineWidth = 5; g.beginPath(); g.arc(0, -s * 1.05, s * .22, -Math.PI / 2, -Math.PI / 2 + a.lit * Math.PI * 2); g.stroke(); }
+      g.restore();
+    }
+    function frame(now) {
+      const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+      A.forEach(a => {
+        if (a.done || finished) return;
+        a.turn -= dt;
+        if (a.turn <= 0) { a.turn = .8 + Math.random() * 1.4; a.vx = (Math.random() < .5 ? -1 : 1) * sp * (.6 + Math.random() * .7); a.vy = (Math.random() - .5) * sp * .6; }
+        a.x += a.vx * dt; a.y += a.vy * dt;
+        if (a.x < w * .2 || a.x > w * .8) { a.vx *= -1; a.x = Math.min(w * .8, Math.max(w * .2, a.x)); }
+        if (a.y < h * .56 || a.y > h * .84) { a.vy *= -1; a.y = Math.min(h * .84, Math.max(h * .56, a.y)); }
+        const inLight = Math.hypot(a.x - spot.x, a.y - h * .02 - spot.y) < R * .85;
+        a.lit = inLight ? a.lit + dt / 1.1 : Math.max(0, a.lit - dt * .4);
+        if (a.lit >= 1) {
+          a.done = true; a.lit = 1; count++; SFX.ding();
+          msg.textContent = `Im Licht: ${count} von 3`;
+          if (count === 3) { finished = true; msg.textContent = "Alle im Rampenlicht! Applaus!"; setTimeout(onWin, 500); }
+        }
+      });
+      stage();
+      A.slice().sort((p, q) => p.y - q.y).forEach(a => actor(a, t));
+      if (finished) fade = Math.min(1, fade + dt * 1.2);
+      d.clearRect(0, 0, w, h);
+      d.globalCompositeOperation = "source-over"; d.fillStyle = `rgba(5,2,8,${.9 * (1 - fade)})`; d.fillRect(0, 0, w, h);
+      d.globalCompositeOperation = "destination-out";
+      const hole = (x, y, r) => { const gr = d.createRadialGradient(x, y, r * .55, x, y, r); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); d.fillStyle = gr; d.beginPath(); d.arc(x, y, r, 0, 7); d.fill(); };
+      hole(spot.x, spot.y, R);
+      A.forEach(a => { if (a.done) hole(a.x, a.y - h * .03, R * .55); });
+      g.drawImage(dark, 0, 0, w, h);
+      g.save(); g.globalCompositeOperation = "lighter"; g.fillStyle = "rgba(255,240,170,.07)";
+      g.beginPath(); g.moveTo(w / 2 - 14, 0); g.lineTo(w / 2 + 14, 0); g.lineTo(spot.x + R * .8, spot.y); g.lineTo(spot.x - R * .8, spot.y); g.closePath(); g.fill(); g.restore();
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    cleanup = () => cancelAnimationFrame(raf);
+  }
+
+  // ---------- Kochkurs: catch the right ingredients in the pot ----------
+  function gameKoch(st, n, onWin) {
+    st.innerHTML = head(n, "Gut gefangen", "Fang mit dem Topf die richtigen Sachen auf. Zieh den Topf mit Finger oder Maus hin und her. Aber Vorsicht vor allem, was nicht in den Topf gehört!") + `
+      <div class="stagebox"><canvas id="kc" aria-label="Küche mit Topf"></canvas></div>
+      <p class="meter" id="kmsg" aria-live="polite">Im Topf: 0 von 10</p>`;
+    const box = st.querySelector(".stagebox"), cv = st.querySelector("#kc"), msg = st.querySelector("#kmsg");
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = box.clientWidth, h = box.clientHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const GOOD = ["🍅", "🥕", "🧅", "🧄", "🌶️", "🍄", "🥔", "🧀"], BAD = ["👟", "🧦", "🔋", "🧸"];
+    const GOAL = 10, size = Math.max(26, w * .075), potW = Math.max(90, w * .24), potY = h - h * .2;
+    let potX = w / 2, target = w / 2, items = [], spawn = .4, count = 0, finished = false, shake = 0, raf = 0, last = performance.now(), steam = 0;
+    const setX = (e) => { const r = cv.getBoundingClientRect(); target = Math.max(potW / 2, Math.min(w - potW / 2, e.clientX - r.left)); };
+    cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); setX(e); });
+    cv.addEventListener("pointermove", setX);
+    const keys = (e) => { if (e.key === "ArrowLeft") { target = Math.max(potW / 2, target - w * .08); e.preventDefault(); } if (e.key === "ArrowRight") { target = Math.min(w - potW / 2, target + w * .08); e.preventDefault(); } };
+    document.addEventListener("keydown", keys);
+    function kitchen() {
+      const t = 26;
+      for (let y = 0; y < h; y += t) for (let x = 0; x < w; x += t) { g.fillStyle = ((x + y) / t) % 2 ? "#FFFFFF" : "#CDEBF7"; g.fillRect(x, y, t, t); }
+      g.fillStyle = "#8B5A2B"; g.fillRect(0, h - h * .1, w, h * .1);
+      g.fillStyle = "#111"; g.fillRect(0, h - h * .1, w, 3);
+    }
+    function pot() {
+      const x = potX + (shake > 0 ? Math.sin(shake * 60) * 6 : 0);
+      g.save(); g.translate(x, potY);
+      g.strokeStyle = "#111"; g.lineWidth = 3;
+      g.fillStyle = "#111"; g.fillRect(-potW / 2 - 14, potW * .08, 16, 8); g.fillRect(potW / 2 - 2, potW * .08, 16, 8);
+      g.fillStyle = "#E8202A"; g.beginPath(); g.moveTo(-potW / 2, 0); g.lineTo(potW / 2, 0); g.lineTo(potW * .44, potW * .38); g.quadraticCurveTo(0, potW * .46, -potW * .44, potW * .38); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#FFD400"; [-.22, 0, .22].forEach(p => { g.beginPath(); g.arc(potW * p, potW * .2, 4, 0, 7); g.fill(); });
+      g.fillStyle = "#3a1d0e"; g.beginPath(); g.ellipse(0, 0, potW / 2, potW * .08, 0, 0, 7); g.fill(); g.stroke();
+      if (steam > 0) {
+        g.strokeStyle = `rgba(120,120,120,${Math.min(.8, steam)})`; g.lineWidth = 4; g.lineCap = "round";
+        [-.2, 0, .2].forEach((p, i) => { g.beginPath(); for (let k = 0; k <= 10; k++) { const yy = -10 - k * 6, xx = potW * p + Math.sin(k * .8 + steam * 8 + i) * 6; k ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } g.stroke(); });
       }
-      draw(m, t / 1000, holding ? 2.6 : (m.level > 0 ? 0.8 : 0));
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    const pressDown = (e) => {
-      if (finished || holding) return;
-      e.preventDefault();
-      holding = true; pour.classList.add("holding"); SFX.loop("pour", { freq: 500, q: 3, vol: .18, attack: .08 });
-      last = performance.now();
-    };
-    const release = () => {
-      if (!holding) return;
-      holding = false; pour.classList.remove("holding"); SFX.stop("pour");
-      const m = M[i];
-      m.stream.setAttribute("height", "0");
-      if (m.level >= m.lo && m.level <= m.hi) {
-        m.liq.setAttribute("d", wave(m.level, 0, 0));
-        m.terr.setAttribute("opacity", "1"); m.okm.setAttribute("opacity", "1");
-        m.el.classList.remove("active"); m.el.classList.add("ok");
-        i++;
-        if (i === 3) { finished = true; pour.disabled = true; cancelAnimationFrame(raf); msg.textContent = "Alle drei genau getroffen!"; onWin(); return; }
-        M[i].el.classList.add("active");
-        msg.textContent = `Perfekt! Form ${i + 1} von 3`; SFX.ding();
-      } else {
-        msg.textContent = m.level > m.hi ? "Zu viel, das ist übergelaufen. Nochmal!" : "Zu wenig. Nochmal!";
-        m.el.classList.remove("spill"); void m.el.offsetWidth; m.el.classList.add("spill"); SFX.wrong();
-        m.level = 0;
-      }
-    };
-    pour.addEventListener("pointerdown", pressDown);
-    pour.addEventListener("pointerup", release);
-    pour.addEventListener("pointerleave", release);
-    pour.addEventListener("pointercancel", release);
-    pour.addEventListener("contextmenu", e => e.preventDefault());
-    pour.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) pressDown(e); });
-    pour.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") release(); });
-    cleanup = () => { holding = false; cancelAnimationFrame(raf); };
+      g.restore();
+    }
+    function frame(now) {
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      potX += (target - potX) * Math.min(1, dt * 14);
+      if (shake > 0) shake = Math.max(0, shake - dt);
+      if (!finished) {
+        spawn -= dt;
+        if (spawn <= 0) {
+          spawn = .55 + Math.random() * .45;
+          const bad = Math.random() < .28;
+          items.push({ e: bad ? BAD[Math.floor(Math.random() * BAD.length)] : GOOD[Math.floor(Math.random() * GOOD.length)], bad, x: size + Math.random() * (w - size * 2), y: -size, vy: h * (.32 + Math.random() * .22) * (1 + count * .03), rot: (Math.random() - .5) * 2 });
+        }
+      } else steam += dt;
+      items.forEach(it => { it.y += it.vy * dt; });
+      items = items.filter(it => {
+        if (!finished && it.y >= potY - 4 && it.y <= potY + potW * .2 && Math.abs(it.x - potX) < potW / 2) {
+          if (it.bad) { count = Math.max(0, count - 2); shake = .35; SFX.wrong(); msg.textContent = `Iiih, ${it.e} gehört nicht in den Topf! Im Topf: ${count} von ${GOAL}`; }
+          else {
+            count++; SFX.key(); msg.textContent = `Im Topf: ${count} von ${GOAL}`;
+            if (count >= GOAL) { finished = true; items = []; SFX.ding(); msg.textContent = "Lecker! Das Menü ist komplett."; setTimeout(onWin, 600); }
+          }
+          return false;
+        }
+        return it.y < h + size;
+      });
+      kitchen();
+      g.textAlign = "center"; g.textBaseline = "middle"; g.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+      items.forEach(it => { g.save(); g.translate(it.x, it.y); g.rotate(it.rot * it.y / h); g.fillText(it.e, 0, 0); g.restore(); });
+      pot();
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    cleanup = () => { cancelAnimationFrame(raf); document.removeEventListener("keydown", keys); };
   }
 
   function gameGraffiti(st, n, onWin) {
@@ -1254,10 +1317,10 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     cleanup = () => { phase = "done"; cancelAnimationFrame(raf); };
   }
 
-  // ---------- duel: Beton vs Siebdruck, winner vs Graffiti ----------
+  // ---------- duel: two semifinals, then the final ----------
   let duel = null;
   function startDuel() {
-    duel = { round: 1, a: "beton", b: "sieb", out: [] };
+    duel = { stage: 0, pairs: [["theater", "sieb"], ["graffiti", "koch"]], winners: [], out: [] };
     renderDuel(); show("v-duel");
   }
   function renderBracket() {
@@ -1270,34 +1333,36 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   function renderDuel() {
     renderBracket();
     const arena = $("arena");
-    if (duel.round === 3) {
+    if (duel.stage === 3) {
       const k = duel.winner, w = W[k];
       arena.innerHTML = `<div class="final pop">
           <p class="round">Dein Sieger</p>
           <div class="row" style="gap:16px">${ICON[k].replace("<svg ", '<svg width="80" height="80" ')}<h2>${esc(w.name)}</h2></div>
-          <p>Soll es der werden? Danach buche ich den Termin für uns.</p>
+          <p>Soll es der werden? Danach suchen wir zusammen einen Termin aus.</p>
           <div class="row"><button id="yes">Ja, das wird's</button><button class="ghost" id="again">Duell nochmal</button></div>
         </div>`;
       arena.querySelector("#yes").addEventListener("click", () => { S.choice = k; save(); renderTicket(); show("v-ticket"); burst(200); balloons(16); SFX.fanfare(); });
       arena.querySelector("#again").addEventListener("click", startDuel);
       return;
     }
-    arena.innerHTML = `<p class="round">${duel.round === 1 ? "Runde 1 von 2" : "Finale"}</p>
+    const [a, b] = duel.stage < 2 ? duel.pairs[duel.stage] : duel.winners;
+    const label = duel.stage === 0 ? "Halbfinale 1 von 2" : duel.stage === 1 ? "Halbfinale 2 von 2" : "Finale";
+    arena.innerHTML = `<p class="round">${label}</p>
       <div class="duel">
-        <button class="fighter" data-k="${duel.a}">${fighterHTML(duel.a)}</button>
+        <button class="fighter" data-k="${a}">${fighterHTML(a)}</button>
         <span class="vs" aria-hidden="true">VS</span>
-        <button class="fighter" data-k="${duel.b}">${fighterHTML(duel.b)}</button>
+        <button class="fighter" data-k="${b}">${fighterHTML(b)}</button>
       </div>`;
     let picked = false;
     arena.querySelectorAll(".fighter").forEach(btn => btn.addEventListener("click", () => {
       if (picked) return; picked = true;
-      const win = btn.dataset.k, lose = win === duel.a ? duel.b : duel.a;
+      const win = btn.dataset.k, lose = win === a ? b : a;
       btn.classList.add("win"); SFX.ding();
       arena.querySelector(`[data-k="${lose}"]`).classList.add("lose");
       duel.out.push(lose); renderBracket(); burst(30);
       setTimeout(() => {
-        if (duel.round === 1) { duel.round = 2; duel.a = win; duel.b = "graffiti"; }
-        else { duel.round = 3; duel.winner = win; }
+        if (duel.stage < 2) duel.winners.push(win); else duel.winner = win;
+        duel.stage++;
         renderDuel();
       }, reduced() ? 300 : 900);
     }));
@@ -1309,7 +1374,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     $("t-icon").innerHTML = ICON[S.choice];
     $("t-title").textContent = w.name;
     $("t-points").innerHTML = w.points.map(p => `<li>${esc(p)}</li>`).join("");
-    $("t-stub").innerHTML = [["Ort", w.where], ["Wann", w.when], ["Dauer", w.dur], ["Nimmst du mit nach Hause", w.take]]
+    $("t-stub").innerHTML = [["Ort", w.where], ["Nimmst du mit nach Hause", w.take]]
       .map(([a, b]) => `<div class="stub">${esc(a.toUpperCase())}<b>${esc(b)}</b></div>`).join("");
   }
   $("fullrestart").addEventListener("click", () => { $("fullconfirm").hidden = false; $("fullconfirm").scrollIntoView({ block: "nearest" }); });
