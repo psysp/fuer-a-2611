@@ -1023,7 +1023,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
   // ---------- Essen gehen: set the table by dragging items onto their outlines ----------
   function gameKoch(st, n, onWin) {
-    st.innerHTML = head(n, "Tisch decken", "Zieh Teller, Gabel, Messer, Glas und Kerze an die richtigen Stellen auf dem Tisch.") + `
+    st.innerHTML = head(n, "Tisch decken", "Zieh Teller, Gabel, Messer, Glas und Kerze an die richtigen Stellen auf dem Tisch. Am Handy schwebt das Teil beim Ziehen über deinem Finger.") + `
       <div class="tablebox"><svg id="tbl" viewBox="0 0 360 220" role="img" aria-label="Tisch mit Umrissen für Teller, Besteck, Glas und Kerze"></svg></div>
       <p class="meter" id="tmsg2" aria-live="polite">Gedeckt: 0 von 5</p>`;
     const svg = st.querySelector("#tbl"), msg = st.querySelector("#tmsg2");
@@ -1069,7 +1069,10 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           const tg = svg.querySelector(`[data-t="${it.k}"]`); tg.setAttribute("stroke", "#111"); tg.setAttribute("stroke-dasharray", "5 4");
           msg.textContent = `Gedeckt: ${count} von 5`;
         }
-        const p = toSvg(e); drag = { it, id: e.pointerId, dx: it.x - p.x, dy: it.y - p.y };
+        const p = toSvg(e), touch = e.pointerType !== "mouse";
+        // on touch the item floats above the fingertip, so the finger covers neither the item nor its spot
+        drag = { it, id: e.pointerId, dx: touch ? 0 : it.x - p.x, dy: touch ? -48 : it.y - p.y, tol: touch ? 30 : 24 };
+        if (touch) { it.x = Math.max(14, Math.min(346, p.x)); it.y = Math.max(14, Math.min(206, p.y - 48)); it.place(); }
         svg.appendChild(it.g); it.g.classList.add("lift");
       });
     });
@@ -1080,9 +1083,9 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     };
     const onUp = (e) => {
       if (!drag || e.pointerId !== drag.id) return;
-      const it = drag.it; drag = null; it.g.classList.remove("lift");
+      const it = drag.it, tol = drag.tol; drag = null; it.g.classList.remove("lift");
       const [tx, ty] = T[it.k];
-      if (Math.hypot(it.x - tx, it.y - ty) < 24) {
+      if (Math.hypot(it.x - tx, it.y - ty) < tol) {
         it.x = tx; it.y = ty; it.place(); it.done = true; it.g.classList.add("placed"); count++;
         const tg = svg.querySelector(`[data-t="${it.k}"]`); tg.setAttribute("stroke", "#00A651"); tg.setAttribute("stroke-dasharray", "none");
         SFX.ding(); msg.textContent = `Gedeckt: ${count} von 5`;
