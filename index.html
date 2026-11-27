@@ -226,7 +226,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .tablebox svg { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
 .dragitem { cursor: grab; }
 .dragitem.lift { cursor: grabbing; filter: drop-shadow(3px 5px 0 rgba(0,0,0,.35)); }
-.dragitem.placed { cursor: default; }
+.dragitem.placed { cursor: grab; }
 /* balloons */
 .balloons { position: fixed; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
 .balloon { position: absolute; bottom: -160px; width: 64px; animation: rise linear forwards; }
@@ -1025,7 +1025,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     const items = Object.keys(ART).map((k, i) => {
       const gEl = document.createElementNS(NS, "g");
       gEl.setAttribute("class", "dragitem"); gEl.dataset.k = k;
-      gEl.innerHTML = `<circle r="32" fill="transparent"/>${ART[k]}`;
+      gEl.innerHTML = `<circle r="${k === "plate" ? 30 : 20}" fill="transparent"/>${ART[k]}`;
       svg.appendChild(gEl);
       const it = { k, g: gEl, x: slots[i][0], y: slots[i][1], done: false };
       const place = () => gEl.setAttribute("transform", `translate(${it.x} ${it.y})`);
@@ -1036,8 +1036,13 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     let drag = null, count = 0;
     items.forEach(it => {
       it.g.addEventListener("pointerdown", (e) => {
-        if (it.done || drag) return;
+        if (drag || count === 5) return;
         e.preventDefault();
+        if (it.done) {
+          it.done = false; count--; it.g.classList.remove("placed");
+          const tg = svg.querySelector(`[data-t="${it.k}"]`); tg.setAttribute("stroke", "#111"); tg.setAttribute("stroke-dasharray", "5 4");
+          msg.textContent = `Gedeckt: ${count} von 5`;
+        }
         const p = toSvg(e); drag = { it, id: e.pointerId, dx: it.x - p.x, dy: it.y - p.y };
         svg.appendChild(it.g); it.g.classList.add("lift");
       });
