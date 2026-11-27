@@ -386,7 +386,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   const ICON = {
     parcel: (c) => `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="34" width="72" height="54" rx="4" fill="${c}" stroke="#1D1F24" stroke-width="3"/><rect x="10" y="24" width="80" height="16" rx="3" fill="${c}" stroke="#1D1F24" stroke-width="3"/><rect x="45" y="24" width="10" height="64" fill="#FF48B0"/><path d="M50 24 C36 6 24 14 34 22 C38 25 46 24 50 24 C54 24 62 25 66 22 C76 14 64 6 50 24Z" fill="#FF48B0" stroke="#1D1F24" stroke-width="2.5"/><text x="50" y="72" text-anchor="middle" font-family="Bricolage Grotesque, Arial Black, sans-serif" font-weight="800" font-size="20" fill="#1D1F24">?</text></svg>`,
     theater: `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-12 38 50)"><path d="M14 22 Q38 12 62 22 Q64 58 38 78 Q12 58 14 22Z" fill="#FFD400" stroke="#111" stroke-width="3"/><path d="M24 38 q5 -5 10 0 M42 38 q5 -5 10 0" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M26 54 Q38 66 50 54" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="rotate(14 64 54)"><path d="M40 28 Q64 18 88 28 Q90 64 64 84 Q38 64 40 28Z" fill="#0091D5" stroke="#111" stroke-width="3"/><path d="M50 44 q5 5 10 0 M68 44 q5 5 10 0" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M52 68 Q64 58 76 68" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/></g></svg>`,
-    koch: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 40 Q18 38 20 26 Q22 14 36 18 Q40 6 52 8 Q64 6 66 18 Q80 14 82 26 Q84 38 70 40 Z" fill="#fff" stroke="#111" stroke-width="3" stroke-linejoin="round"/><rect x="32" y="38" width="36" height="12" fill="#fff" stroke="#111" stroke-width="3"/><path d="M16 60 H84 V80 Q84 90 74 90 H26 Q16 90 16 80 Z" fill="#E8202A" stroke="#111" stroke-width="3"/><rect x="10" y="56" width="80" height="8" rx="3" fill="#111"/><rect x="4" y="66" width="12" height="6" rx="3" fill="#111"/><rect x="84" y="66" width="12" height="6" rx="3" fill="#111"/><circle cx="36" cy="74" r="3" fill="#FFD400"/><circle cx="50" cy="78" r="3" fill="#FFD400"/><circle cx="64" cy="74" r="3" fill="#FFD400"/></svg>`,
+    koch: `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="54" r="34" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="50" cy="54" r="22" fill="#FFD400" stroke="#111" stroke-width="2.5"/><path d="M40 56 Q50 44 60 56 Q50 64 40 56Z" fill="#E8202A" stroke="#111" stroke-width="2"/><circle cx="46" cy="48" r="2.5" fill="#00A651"/><circle cx="56" cy="50" r="2.5" fill="#00A651"/><path d="M8 22 V44 M4 22 V36 Q4 42 8 44 Q12 42 12 36 V22 M8 44 V88" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M92 22 Q84 34 86 52 H92 V88" stroke="#111" stroke-width="3" fill="#ccc" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     graffiti: `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="32" y="30" width="36" height="60" rx="8" fill="#FF48B0" stroke="#1D1F24" stroke-width="3"/><rect x="38" y="18" width="24" height="14" rx="3" fill="#FBFBF8" stroke="#1D1F24" stroke-width="3"/><rect x="46" y="10" width="8" height="9" fill="#1D1F24"/><rect x="32" y="50" width="36" height="14" fill="#FFD23F" stroke="#1D1F24" stroke-width="3"/><circle cx="22" cy="12" r="3" fill="#0078BF"/><circle cx="16" cy="20" r="2" fill="#0078BF"/><circle cx="26" cy="22" r="2.5" fill="#0078BF"/><circle cx="12" cy="10" r="1.5" fill="#0078BF"/></svg>`,
     sieb: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M32 14 L18 22 L8 40 L22 46 L26 40 V88 H74 V40 L78 46 L92 40 L82 22 L68 14 C64 22 36 22 32 14Z" fill="#FBFBF8" stroke="#1D1F24" stroke-width="3" stroke-linejoin="round"/><path d="M50 72 C34 62 36 46 44 46 C48 46 50 50 50 52 C50 50 52 46 56 46 C64 46 66 62 50 72Z" fill="#0078BF"/><path d="M50 72 C34 62 36 46 44 46 C48 46 50 50 50 52 C50 50 52 46 56 46 C64 46 66 62 50 72Z" fill="#FF48B0" opacity=".85" transform="translate(3 2)" style="mix-blend-mode:multiply"/></svg>`
   };
@@ -411,9 +411,9 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
       game: "sieb"
     },
     koch: {
-      name: "Kochkurs für zwei", short: "Kochkurs", where: "Ein Kochkurs in München, suchen wir zusammen aus", paper: "#b8f0c8",
-      points: ["Zusammen ein ganzes Menü kochen", "Neue Rezepte und Profi-Tricks lernen", "Am Ende essen wir alles selbst auf"],
-      take: "Neue Lieblingsrezepte und einen vollen Bauch",
+      name: "Einladung zum Essen", short: "Essen gehen", where: "Ein Restaurant in München, das du aussuchst", paper: "#b8f0c8",
+      points: ["Du suchst das Restaurant aus", "Ich lade dich ein", "Vorspeise, Hauptgang, Nachtisch: alles drin"],
+      take: "Einen vollen Bauch und einen schönen Abend zu zweit",
       game: "koch"
     }
   };
@@ -1046,7 +1046,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
           if (it.bad) { count = Math.max(0, count - 2); shake = .35; SFX.wrong(); msg.textContent = `Iiih, ${it.e} gehört nicht in den Topf! Im Topf: ${count} von ${GOAL}`; }
           else {
             count++; SFX.key(); msg.textContent = `Im Topf: ${count} von ${GOAL}`;
-            if (count >= GOAL) { finished = true; items = []; SFX.ding(); msg.textContent = "Lecker! Das Menü ist komplett."; setTimeout(onWin, 600); }
+            if (count >= GOAL) { finished = true; items = []; SFX.ding(); msg.textContent = "Lecker! Der Tisch ist gedeckt."; setTimeout(onWin, 600); }
           }
           return false;
         }
