@@ -913,7 +913,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
   // ---------- Theater: guide the spotlight over three actors on a dark stage ----------
   function gameTheater(st, n, onWin) {
-    st.innerHTML = head(n, "Licht an!", "Auf der dunklen Bühne huschen drei Figuren herum. Führ den Lichtkegel mit Finger oder Maus über sie und halte jede kurz im Licht.") + `
+    st.innerHTML = head(n, "Licht an!", "Auf der dunklen Bühne huschen drei Figuren herum. Führ den Lichtkegel über sie und halte jede kurz im Licht. Am Handy wischst du einfach irgendwo auf der Bühne, das Licht wandert mit.") + `
       <div class="stagebox"><canvas id="th" aria-label="Dunkle Bühne mit Lichtkegel"></canvas></div>
       <p class="meter" id="tmsg" aria-live="polite">Im Licht: 0 von 3</p>`;
     const box = st.querySelector(".stagebox"), cv = st.querySelector("#th"), msg = st.querySelector("#tmsg");
@@ -923,14 +923,25 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const dark = document.createElement("canvas"); dark.width = cv.width; dark.height = cv.height;
     const d = dark.getContext("2d"); d.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const R = Math.max(42, w * .15), sp = w * .2;
+    const R = Math.max(52, w * .16), sp = w * .2;
     const cols = ["#E8202A", "#0091D5", "#FFD400"];
     const A = cols.map((c, i) => ({ c, x: w * (.3 + i * .2), y: h * (.6 + (i % 2) * .12), vx: (Math.random() < .5 ? -1 : 1) * sp * (.7 + Math.random() * .5), vy: (Math.random() - .5) * sp * .5, lit: 0, done: false, turn: 1 + Math.random() }));
     const spot = { x: w / 2, y: h * .45 };
     let raf = 0, last = performance.now(), count = 0, finished = false, fade = 0;
-    const move = (e) => { const r = cv.getBoundingClientRect(); spot.x = e.clientX - r.left; spot.y = e.clientY - r.top; };
-    cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); move(e); });
+    // mouse: the light sits under the cursor. touch: the light moves with the finger like a trackpad,
+    // so the finger never covers it.
+    let lastT = null;
+    const clampSpot = () => { spot.x = Math.max(0, Math.min(w, spot.x)); spot.y = Math.max(0, Math.min(h, spot.y)); };
+    const move = (e) => {
+      if (e.pointerType === "mouse") { const r = cv.getBoundingClientRect(); spot.x = e.clientX - r.left; spot.y = e.clientY - r.top; return; }
+      if (!lastT) return;
+      spot.x += (e.clientX - lastT.x) * 1.15; spot.y += (e.clientY - lastT.y) * 1.15; clampSpot();
+      lastT = { x: e.clientX, y: e.clientY };
+    };
+    cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); if (e.pointerType !== "mouse") lastT = { x: e.clientX, y: e.clientY }; else move(e); });
     cv.addEventListener("pointermove", move);
+    const endT = () => { lastT = null; };
+    cv.addEventListener("pointerup", endT); cv.addEventListener("pointercancel", endT);
     function stage() {
       g.fillStyle = "#2a1430"; g.fillRect(0, 0, w, h);
       g.fillStyle = "#5a3a22"; g.beginPath(); g.moveTo(w * .08, h * .48); g.lineTo(w * .92, h * .48); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fill();
